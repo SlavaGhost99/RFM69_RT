@@ -903,7 +903,7 @@ void RF69_SendVariablePacket(const uint8_t* data, uint8_t len)
 	
 	RF69_WaitPacketSent(); // Make sure we dont interrupt an outgoing message
 	RF69_SetModeIdle(); // Prevent RX while filling the fifo
-
+	memset((uint8_t*)&_packetVar,0,sizeof(RF69_VAR_PACKET));
 	_packetVar._header._HeaderLenght = len; 
 	if(len < RF_FIFOTHRESH_MAX)
 	{

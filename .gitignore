@@ -1,0 +1,47 @@
+
+#Ignore thumbnails created by Windows
+Thumbs.db
+#Ignore files built by Visual Studio
+*.obj
+*.exe
+*.pdb
+*.user
+*.aps
+*.pch
+*.vspscc
+*_i.c
+*_p.c
+*.ncb
+*.suo
+*.tlb
+*.tlh
+*.bak
+*.cache
+*.ilk
+*.log
+[Bb]in
+[Dd]ebug*/
+*.lib
+*.sbr
+obj/
+[Rr]elease*/
+_ReSharper*/
+[Tt]est[Rr]esult*
+.vs/
+#Nuget packages folder
+packages/
+RFM69_R/Drivers/*
+RFM69_T/Drivers/*
+RFM69_R/MDK-ARM/*
+RFM69_T/MDK-ARM/*
+
+
+
+/LIB/RFM69_C/RawDatagram.cpp
+/LIB/RFM69_C/RawDatagram.h
+/LIB/SPI_WRAPP/*
+/LIB/SPI_WRAPP/spi_wrapp.h
+/RFM69_R/Middlewares/*
+/RFM69_T/Middlewares/*
+/LIB/BASE_IO/_spi_wrapp.cpp
+/LIB/BASE_IO/_spi_wrapp.h
