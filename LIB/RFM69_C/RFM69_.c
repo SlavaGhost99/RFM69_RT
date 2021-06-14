@@ -193,13 +193,13 @@ static const ModemConfig MODEM_CONFIG_TABLE[] =
 
 /******************************************************************************/
 #if _ENABLE_VAR_PACKET ==1U
-	static RF69_VAR_PACKET _packetVar;
+	volatile static RF69_VAR_PACKET _packetVar;
 #endif
 /******************************************************************************/
 
 /******************************************************************************/
 #if _ENABLE_UNLIMIT_PACKET ==1U
-	static RF69_UNLIM_PACKET _unlimPacketSend;
+	volatile static RF69_UNLIM_PACKET _unlimPacketSend;
 	volatile static uint8_t _packetLenght;
 	//Длинна заголовка Unlimit пакета
 	#define _LENGHT_UNLIM_PACK_HEADER	(sizeof(_unlimPacketSend._header))
@@ -234,8 +234,8 @@ volatile bool _flag_Tx_Busy					= false; //Флаг "Приемник занят
 volatile bool _flag_FIFO_Start				= false;
 volatile bool _flag_Tx_End					= false; //Флаг окончания передачи
 
-volatile uint16_t _count_FIFO;						//Счетчик FIFO
-volatile uint16_t _sizeFIFO_data;
+volatile static uint16_t _count_FIFO;						//Счетчик FIFO
+volatile static uint16_t _sizeFIFO_data;
 
 volatile static uint32_t rxGood				= 0;
 volatile static uint32_t rxBad				= 0;
@@ -512,13 +512,16 @@ void RF69_Reset()
 void RF69_SetOpMode(uint8_t mode)
 {
     static uint8_t opmode;
-	opmode = RF69_ReadReg(REG_OPMODE_01);
+	opmode = RF69_ReadReg(REG_OPMODE_01); //Read OpMode
+							// Read	RegOpMode ==		0x04
     opmode &= ~RF_OPMODE_MODE;
     opmode |= (mode & RF_OPMODE_MODE);
-    RF69_WriteReg(REG_OPMODE_01, opmode);
+    RF69_WriteReg(REG_OPMODE_01, opmode);//Write OpMode 0x04
+							// Write	RegOpMode	0x..
 
     // Wait for mode to change.
-    while (!(RF69_ReadReg(REG_IRQFLAGS1_27) & RF_IRQFLAGS1_MODEREADY))
+    while (!(RF69_ReadReg(REG_IRQFLAGS1_27) & RF_IRQFLAGS1_MODEREADY))//Read RegIrqFlags1
+							// Read		RegIrqFlags1 ==		0x..
 	{
 		__ASM volatile ("NOP");
 	}
@@ -532,8 +535,8 @@ void RF69_SetModeIdle(void)
 		if (_power >= 18)
 		{
 			// If high power boost, return power amp to receive mode
-			RF69_WriteReg(REG_TESTPA1_5A, RF_TESTPA1_NORMAL);
-			RF69_WriteReg(REG_TESTPA2_5C, RF_TESTPA2_NORMAL);
+			RF69_WriteReg(REG_TESTPA1_5A, RF_TESTPA1_NORMAL); //Write RegTestPa1 0x55
+			RF69_WriteReg(REG_TESTPA2_5C, RF_TESTPA2_NORMAL); //Write RegTestPa2 0x70
 		}
 		RF69_SetOpMode(RF_OPMODE_STANDBY);
 		_mode = RF69_ModeIdle;
@@ -573,6 +576,7 @@ void RF69_SetModeTx(void)
 		_flag_Tx_End = false;
 		RF69_WriteReg(REG_DIOMAPPING1_25, RF_DIOMAPPING1_DIO0_00 | RF_DIOMAPPING1_DIO1_10); // Set interrupt line 0 PacketSent
 										//PacketSent				FifoNotEmpty
+									// Write	RegDioMapping1		0x5D
 		RF69_SetOpMode(RF_OPMODE_TRANSMITTER); // Clears FIFO
 		_mode = RF69_ModeTx;
 	}
@@ -669,15 +673,19 @@ uint8_t RF69_SetModemConfig(ModemConfigChoice index)
 void RF69_SetPreambleLength(uint16_t bytes)
 {
     RF69_WriteReg(REG_PREAMBLEMSB_2C, bytes >> 8);
+					// Write	RegPreambleMsb 0x00
     RF69_WriteReg(REG_PREAMBLELSB_2D, bytes & 0xff);
+					// Write	RegPreambleLsb 0x40
 }
 
 void RF69_SetSyncWords(const uint8_t* syncWords, uint8_t len)
 {
     uint8_t syncconfig = RF69_ReadReg(REG_SYNCCONFIG_2E);
+							// Read 	RegSyncConfig
     if (syncWords && len && len <= 4)
     {
 		RF69_WriteMultipleReg(REG_SYNCVALUE1_2F, (uint8_t*)syncWords, len);
+							// Write	RegSyncValue1
 		syncconfig |= RF_SYNC_ON;
     }
     else
@@ -685,6 +693,7 @@ void RF69_SetSyncWords(const uint8_t* syncWords, uint8_t len)
     syncconfig &= ~RF_SYNC_SIZE_8;
     syncconfig |= (len-1) << 3;
     RF69_WriteReg(REG_SYNCCONFIG_2E, syncconfig);
+							// Write	RegSyncConfig
 }
 
 void RF69_Set_AES_Key(uint8_t* key)
@@ -705,8 +714,11 @@ void RF69_SetFrequency(float freq)
     // Frf = FRF / FSTEP
     uint32_t frf = (uint32_t)((freq * 1000000.0) / RF69_FREQ_STEP);
     RF69_WriteReg(REG_FRFMSB_07, (frf >> 16) & 0xff);
+						//Write	RegFrfMsb 0xD8
     RF69_WriteReg(REG_FRFMID_08, (frf >> 8) & 0xff);
-    RF69_WriteReg(REG_FRFLSB_09, frf & 0xff);
+ 						//Write	RegFrfMid 0xC0
+   RF69_WriteReg(REG_FRFLSB_09, frf & 0xff);
+						//Write	RegFrfLsb 0x00
 }
 
 
@@ -721,54 +733,96 @@ uint8_t RF69_Init()
 	do
 	{
 		RF69_WriteReg(REG_SYNCVALUE1_2F, 0xAA);
+						//Write SyncValue1 0xAA
 	}
-	while (RF69_ReadReg(REG_SYNCVALUE1_2F) != 0xaa && HAL_GetTick()-startTime < _MAX_INIT_DELAY);
+	while (RF69_ReadReg(REG_SYNCVALUE1_2F) != 0xaa
+							&& HAL_GetTick()-startTime < _MAX_INIT_DELAY);
+						//Read SyncValue1 0xAA
+	
 	startTime = HAL_GetTick();
 		do
 	{
 		RF69_WriteReg(REG_SYNCVALUE1_2F, 0x55);
+						//Write SyncValue1 0x55
 		__asm volatile ("nop");
 	}
 	  while (RF69_ReadReg(REG_SYNCVALUE1_2F) != 0x55 && HAL_GetTick()-startTime < _MAX_INIT_DELAY);
+						//Read SyncValue1 0x55
+	
 	if((HAL_GetTick() - startTime) > _MAX_INIT_DELAY)
 	{
 		return false;
 	}
 	//
 	_deviceType = RF69_ReadReg(REG_VERSION_10);
+						//Read Version == 0x24
+	
     if (_deviceType == 00 || _deviceType == 0xff)
 	{
 		return false;
-	}
-
+	}	
+	RF69_SetModeIdle(); // Read		OpMode == 0x04
+						// Write	OpMode 0x04
+						// Read		RegIrqFlags1 == 0x80
 	
-	RF69_SetModeIdle();
-	
-	
-	RF69_WriteReg(REG_FIFOTHRESH_3C, RF_FIFOTHRESH_TXSTART_FIFONOTEMPTY | RF_FIFOTHRESH_DEF); // thresh 15 is default
+	RF69_WriteReg(REG_FIFOTHRESH_3C,
+						RF_FIFOTHRESH_TXSTART_FIFONOTEMPTY
+						| RF_FIFOTHRESH_DEF); // thresh 15 is default
+						// Write	RegFifoThresh 0x80
 	
 	RF69_WriteReg(REG_TESTDAGC_6F, RF_DAGC_IMPROVED_LOWBETA0);
+						// Write	RegTestDagc 0x30
+	
 	// If high power boost set previously, disable it
 	RF69_WriteReg(REG_TESTPA1_5A, RF_TESTPA1_NORMAL);
+						// Write	RegTestPa1 0x55
 	RF69_WriteReg(REG_TESTPA2_5C, RF_TESTPA1_BOOST);
+						// Write	RegTestPa2 0x5D
 
     // The following can be changed later by the user if necessary.
     // Set up default configuration
 //    uint8_t syncwords[] = { 0x2d, 0xd4 };
     RF69_SetSyncWords(_defaultSyncWord, _defaultSyncWordLenght); // 
+						// Read		RegSyncConfig == 0x98
+						// Write	RegSyncValue1 0xAA
+						// Write	RegSyncValue2 0xD4
+						// Write	RegSyncValue3 0x55
+						// Write	RegSyncConfig 0x90
     // Reasonably fast and reliable default speed and modulation
     RF69_SetModemConfig(_defaultModemConfig);
+						// Write	RegDataModul 0x01
+						// Write	RegBitrateMsb 0x01
+						// Write	RegBitrateLsb 0x00
+						// Write	RegFdevMsb 0x08
+						// Write	RegFdevMsb 0x00
+						// Write	RegRxBw 0xE1 ?
+						// Write	RegAfcBw 0xE1
+						// Write	RegPacketConfig1 0xD0
 	RF69_WriteReg(REG_PAYLOADLENGTH_38, RF69_MAX_FIFO_LENGHT);
+						// Write	RegPayloadLength 0x42
 
-    // 3 would be sufficient, but this is the same as RF22's
+	// 3 would be sufficient, but this is the same as RF22's
     RF69_SetPreambleLength(_defaultPreambleLength);
+						// Write	RegPreambleMsb 0x00
+						// Write	RegPreambleLsb 0x40
+
     // An innocuous ISM frequency, same as RF22's
     RF69_SetFrequency(_defaultFreq);
+						// Write	RegFrfMsb 0xD8
+						// Write	RegFrfMid 0xC0
+						// Write	RegFrfLsb 0x00
+
     // No encryption
     RF69_Set_AES_Key(NULL);
+						// Read 	RegPacketConfig2 == 0x02
+						// Write	RegPacketConfig2 0x02
+
     // +13dBm, same as power-on default
     RF69_SetTxPower(20, 1); 
+						// Write	RegPaLevel 0x7F
+						
 	RF69_SetAdressThis(_DEFAULT_THIS_ADR);
+						// Write	RegNodeAdrs 0xxx
 	RF69_SetAdressTo(_DEFAULT_TO_ADR);
 	
 	return 1;
@@ -900,9 +954,11 @@ void RF69_SendVariablePacket(const uint8_t* data, uint8_t len)
 	RF69_PacketMode(_PACKET_VARIABLE); //Switch the packet reception mode to Variable mode
 												//Переключаем режим приема пакетов в Variable mode
 	RF69_WriteReg(REG_FIFOTHRESH_3C, RF_FIFOTHRESH_MAX);
+									// Write	RegFifoThresh		0x20
 	
 	RF69_WaitPacketSent(); // Make sure we dont interrupt an outgoing message
 	RF69_SetModeIdle(); // Prevent RX while filling the fifo
+
 	memset((uint8_t*)&_packetVar,0,sizeof(RF69_VAR_PACKET));
 	_packetVar._header._HeaderLenght = len; 
 	if(len < RF_FIFOTHRESH_MAX)
@@ -919,6 +975,9 @@ void RF69_SendVariablePacket(const uint8_t* data, uint8_t len)
 				(uint8_t*)&_packetVar,
 				size);
 	RF69_SetModeTx(); // Start the transmitter
+									// Write	RegTestPa1		0x5D
+									// Write	RegTestPa2		0x7C
+	
 	_count_FIFO = RF69_MAX_FIFO_LENGHT - sizeof(_packetVar._header);
 	DBG_OFF;
 	LED_BLUE_OFF;
@@ -1499,7 +1558,8 @@ bool RF69_WaitPacketSent(void)
 void RF69_SetAdressThis(uint8_t adr)
 {
 	RF69_WriteReg(REG_NODEADRS_39, adr);
-	_thisAdress = adr;
+					// Write	RegNodeAdrs
+_thisAdress = adr;
 }
 
 void RF69_SetAdressTo(uint8_t adr)
@@ -1515,17 +1575,22 @@ void RF69_PacketMode(_PACKET_MODE isLong)
 	}
 	_PacketMode = isLong;
 	uint8_t packet_conf = RF69_ReadReg(REG_PACKETCONFIG1_37) & ~RF_PACKET1_CRC_ON;
+								// Read	RegPacketConfig1	0xD0
+
 //	uint8_t packet_conf = RF69_ReadReg(REG_PACKETCONFIG1_37) |  RF_PACKET1_CRC_ON;
 	switch(isLong)
 	{
 #if _ENABLE_VAR_PACKET == 1U
 		case _PACKET_VARIABLE: 			//Пакет переменной длинны 
 			RF69_WriteReg(REG_PAYLOADLENGTH_38, 255); //Длинна пакета = 255
+								// Write	RegPayloadLength	0xFF
 			RF69_WriteReg(REG_FIFOTHRESH_3C, RF_FIFOTHRESH_MAX); //
+								// Write	RegFifoThresh		0x20
 			packet_conf |= RF_PACKET1_FORMAT_VARIABLE;
 			packet_conf &= ~RF_PACKET1_ADRSFILTERING_NODE;		//Отключение фильтрации адреса
 			packet_conf &= ~RF_PACKET1_CRC_ON; //
 			RF69_WriteReg(REG_PACKETCONFIG1_37, packet_conf); //0xC0
+								// Write	RegPacketConfig1	0xC0
 //			packet_conf = RF69_ReadReg(REG_PACKETCONFIG1_37);
 			if(_flagUseAES)
 			{

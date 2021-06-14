@@ -15,12 +15,12 @@
 #include <spi.h>
 //*** <<< Use Configuration Wizard in Context Menu >>> ***
 // <h> Packet Mode Select
-	// <e> Using VERIABLE PACKET
-	#define _ENABLE_VAR_PACKET 0U
+	// <e> Using VARIABLE PACKET
+	#define _ENABLE_VAR_PACKET 1U
 	// </e>
 	
 	// <e> Using UNLIMIT Packet
-	#define _ENABLE_UNLIMIT_PACKET 1U
+	#define _ENABLE_UNLIMIT_PACKET 0U
 			// <o> Set UNLIMITED Buffer size
 		//<0xF0-0x800>
 		#define _MAX_UNLIM_BUF_LENGHT 0x200

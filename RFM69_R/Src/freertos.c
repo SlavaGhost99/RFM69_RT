@@ -270,14 +270,14 @@ void StartRadioTask(void *argument)
 			else
 			{
 //				LED_RED_ON;
-				_bad;
+				_bad++;
 			}
 			
 		}
 		else
 		{
 			LED_RED_ON;
-			_bad;
+			_bad++;
 		}
 		_percent = _bad/((float)_all/100);
 
@@ -301,13 +301,13 @@ void StartRadioTask(void *argument)
 			}
 			else
 			{
-				_bad;
+				_bad++;
 			}
 		}
 		else
 		{
 			LED_RED_ON;
-			_bad;
+			_bad++;
 		}
 		_percent = _bad/((float)_all/100);
 //extern bool SendACK(uint8_t *buf, uint16_t len);
@@ -337,14 +337,14 @@ void StartRadioTask(void *argument)
 			}
 			else
 			{
-				_bad;
+				_bad++;
 			}
 			
 		}
 		else
 		{
 			LED_RED_ON;
-			_bad;
+			_bad++;
 		}
 		_percent = _bad/((float)_all/100);
         

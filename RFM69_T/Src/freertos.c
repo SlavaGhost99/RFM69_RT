@@ -285,9 +285,9 @@ void StartRadioTask(void *argument)
 			_bad;
 		}
 		_percent = _bad/((float)_all/100);
-extern bool SendACK(uint8_t *buf, uint16_t len);
+//extern bool SendACK(uint8_t *buf, uint16_t len);
 
-	SendACK((uint8_t*)_LMessage, size);
+//	SendACK((uint8_t*)_LMessage, size);
 		
 #endif
 	
