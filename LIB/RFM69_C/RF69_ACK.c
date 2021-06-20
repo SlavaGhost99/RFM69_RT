@@ -13,9 +13,10 @@
 typedef struct 
 {
 	volatile uint16_t lenght;
-	volatile uint32_t u32Rand;
+	volatile uint32_t dataRand;
 	volatile uint8_t flags;
 	volatile uint32_t crc;
+	volatile uint32_t sessionRand;
 //	volatile uint8_t reserved8_0;
 //	volatile uint8_t reserved8_1;
 //	volatile uint16_t reserved16_0;
@@ -27,7 +28,7 @@ typedef struct
 typedef struct
 {
 	uint16_t lenght;
-	uint32_t u32Rand;
+	uint32_t dataRand;
 	uint8_t flags;
 	uint32_t crc;
 }_HEADER_ACK_PACK;
@@ -115,7 +116,7 @@ bool SendFixACK(const uint8_t *buf, uint8_t len)
 //	DBG_OFF;
 	RF69_PacketMode(_PACKET_FIXED);
 	_fix_pack._header.lenght = len;
-	GenRNG((uint8_t*) &_fix_pack._header.u32Rand, sizeof(&_fix_pack._header.u32Rand));
+	GenRNG((uint8_t*) &_fix_pack._header.dataRand, sizeof(&_fix_pack._header.dataRand));
 	_fix_pack._header.crc = CalcCRC((uint8_t*)buf, len);
 	memset(_fix_pack._packet, 0, sizeof(_fix_pack._packet));
 	memcpy(_fix_pack._packet, buf, len);
@@ -142,7 +143,7 @@ bool SendVarACK(const uint8_t *buf, uint8_t len)
 	_var_pack._header.lenght = len;
 	_var_pack._header.crc = CalcCRC((uint8_t*)buf, len);
 	memcpy((uint8_t*)_var_pack._packet, buf, len);
-	GenRNG ((uint8_t*)&_var_pack._header.u32Rand, sizeof(_var_pack._header.u32Rand));
+	GenRNG ((uint8_t*)&_var_pack._header.dataRand, sizeof(_var_pack._header.dataRand));
 	RF69_SendVariablePacket((uint8_t*)&_var_pack, len + sizeof(_HEADER_ACK_PACK));
 	cnt = 0;
 	while(_flag_Tx_Busy)
@@ -174,7 +175,7 @@ bool SendUnlimACK(const uint8_t *buf, uint16_t len)
 	_unlim_pack._header.lenght = len;
 	_unlim_pack._header.crc = CalcCRC((uint8_t*)buf, len);
 	memcpy((uint8_t*)_unlim_pack._packet, buf, len);
-	GenRNG ((uint8_t*)&_unlim_pack._header.u32Rand, sizeof(_unlim_pack._header.u32Rand));
+	GenRNG ((uint8_t*)&_unlim_pack._header.dataRand, sizeof(_unlim_pack._header.dataRand));
 	RF69_SendUnlimitedLengthPacket((uint8_t*)&_unlim_pack, len + sizeof(_HEADER_ACK_PACK));
 	cnt = 0;
 	while(_flag_Tx_Busy)
@@ -352,7 +353,8 @@ bool MakeACK(_HEADER_ACK_PACK *header, uint8_t *buf, _ACK* _ack)
 	
 	_ack->lenght = header->lenght;
 	_ack->crc = CalcCRC(buf, header->lenght);
-	_ack->u32Rand = header->u32Rand;
+	_ack->dataRand = header->dataRand;
+	GenRNG((uint8_t*)_ack->sessionRand, sizeof(_ack->sessionRand));
 	return false;
 }
 
