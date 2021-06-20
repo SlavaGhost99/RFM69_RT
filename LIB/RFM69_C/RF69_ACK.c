@@ -157,7 +157,7 @@ bool SendVarACK(const uint8_t *buf, uint8_t len)
 	}
 	osDelay(5);
 //	return 0;
-	return ReceiveACK (&_var_pack._header, (uint8_t*)buf);
+	return ReceiveACK ((_HEADER_ACK_PACK*)&_var_pack._header, (uint8_t*)buf);
 	
 }
 #endif
@@ -166,7 +166,30 @@ bool SendVarACK(const uint8_t *buf, uint8_t len)
 
 bool SendUnlimACK(const uint8_t *buf, uint16_t len)
 {
-	return false;
+	RF69_PacketMode(_PACKET_UNLIMIT);
+	if(len > _MAX_UNLIM_BUF_LENGHT)
+	{
+		return false;
+	}
+	_unlim_pack._header.lenght = len;
+	_unlim_pack._header.crc = CalcCRC((uint8_t*)buf, len);
+	memcpy((uint8_t*)_unlim_pack._packet, buf, len);
+	GenRNG ((uint8_t*)&_unlim_pack._header.u32Rand, sizeof(_unlim_pack._header.u32Rand));
+	RF69_SendUnlimitedLengthPacket((uint8_t*)&_unlim_pack, len + sizeof(_HEADER_ACK_PACK));
+	cnt = 0;
+	while(_flag_Tx_Busy)
+	{
+		if(cnt >100)
+		{
+			RF69_SetModeIdle();
+			return false;
+		}
+		cnt++;
+		osDelay(1);
+	}
+	osDelay(5);
+//	return 0;
+	return ReceiveACK ((_HEADER_ACK_PACK*)&_unlim_pack._header, (uint8_t*)buf);
 }
 #endif
 bool RecevFixACK(uint8_t *buf, uint8_t *len)
@@ -251,7 +274,46 @@ bool RecevVarACK(uint8_t *buf, uint8_t *len)
 
 bool RecevUnlimACK(uint8_t *buf, uint16_t *len)
 {
-	return false;
+	RF69_PacketMode(_PACKET_UNLIMIT);
+	RF69_SetModeIdle();
+	if(!RF69_WaitAvailableTimeout(500))
+	{
+		return false;
+	}
+	_buf_len = _MAX_UNLIM_BUF_LENGHT; //Максимальная длинна
+	
+	if (!RF69_RecvUnlimitPacket((uint8_t*)&_unlim_pack, (uint16_t*)&_buf_len))
+	{
+		return false;
+	}
+	cnt = 0;
+	while(_flag_Rx_Busy)
+	{
+		if(cnt >100)
+		{
+			RF69_SetModeIdle();
+			return false;
+		}
+		cnt++;
+		osDelay(1);
+	}
+//	return 0;
+	_crcPaket = CalcCRC((uint8_t*)&_unlim_pack._packet, _unlim_pack._header.lenght);
+	if(_crcPaket != _unlim_pack._header.crc)
+	{
+		return false;
+	}
+	//Проверка длинны
+	if(_buf_len != _unlim_pack._header.lenght + sizeof(_HEADER_ACK_PACK))
+	{
+		return false;
+	}
+	memcpy(buf, (uint8_t*)_unlim_pack._packet, _unlim_pack._header.lenght);
+	*len = _fix_pack._header.lenght;
+	osDelay(10);
+	//Посылка подтверждения
+	return SendACK((_HEADER_ACK_PACK*)&_unlim_pack._header, (uint8_t*)&_unlim_pack._packet);
+
 }
 
 /******************************************************************************/

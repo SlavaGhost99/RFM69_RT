@@ -77,6 +77,11 @@ extern const uint8_t _LMessage[256];
 uint8_t buf[RF69_MAX_FIFO_LENGHT];
 uint8_t lenghtBuf;
 #endif
+#if _APP_MODE == 6U //Unlim Packet
+extern const uint8_t  _UMessage[512];
+uint8_t buf[_MAX_UNLIM_BUF_LENGHT];
+uint16_t lenghtBuf;
+#endif
 
 
 /* USER CODE END Variables */
@@ -380,6 +385,25 @@ void StartRadioTask(void *argument)
 		{
 			LED_YELL_ON;
 			_flag = memcmp((uint8_t*)buf, _LMessage, lenghtBuf);
+			if(_flag == 0)
+			{
+				LED_GREEN_ON;
+			}
+			
+		}
+		else
+		{
+			LED_RED_ON;
+		}
+
+#endif
+#if _APP_MODE == 6U //Var Packet with ACK
+		lenghtBuf = _MAX_UNLIM_BUF_LENGHT;
+		_flag = RecevUnlimACK((uint8_t*)buf, &lenghtBuf);
+		if(_flag)
+		{
+			LED_YELL_ON;
+			_flag = memcmp((uint8_t*)buf, _UMessage, lenghtBuf);
 			if(_flag == 0)
 			{
 				LED_GREEN_ON;
