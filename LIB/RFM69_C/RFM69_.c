@@ -68,13 +68,13 @@ float _defaultFreq = 867;
 //		<o>	Length
 //		<i>	1..65535 def 0x40
 //		<0x1-0xffff>
-uint16_t _defaultPreambleLength = 0x0040;
+uint16_t _defaultPreambleLength = 0x0100;
 //</h>
 
 //<h> Set Sync Word
 //		<o>	Sync Word Lenght
 //		<1-8>
-uint8_t _defaultSyncWordLenght = 3;
+uint8_t _defaultSyncWordLenght = 4;
 //		<o0> 1-th Word
 //		<0x01-0xFF>
 //		<o1> 2-th Word
@@ -94,11 +94,11 @@ uint8_t _defaultSyncWordLenght = 3;
 #define _SW_0	170
 #define _SW_1	212
 #define _SW_2	85
-#define _SW_3	0
-#define _SW_4	0
-#define _SW_5	0
-#define _SW_6	0
-#define _SW_7	0
+#define _SW_3	170
+#define _SW_4	189
+#define _SW_5	85
+#define _SW_6	170
+#define _SW_7	212
 uint8_t _defaultSyncWord[] = {_SW_0, _SW_1, _SW_2, _SW_3, _SW_4, _SW_5, _SW_6, _SW_7} ;
 //</h>
 //*** <<< end of configuration section >>>    ***
@@ -227,7 +227,7 @@ volatile static uint8_t _rxBufLenght;
 volatile bool _flagIRQ_DIO0					= false;
 volatile bool _flagIRQ_DIO1					= false;
 
-volatile _PACKET_MODE _PacketMode	= _PACKET_FIXED;
+volatile _PACKET_MODE _PacketMode	= 255;
 volatile bool _flagUseAES					= false;
 volatile bool _flag_Rx_Busy					= false; //Флаг "Передатчик занят"
 volatile bool _flag_Tx_Busy					= false; //Флаг "Приемник занят"
@@ -761,14 +761,14 @@ uint8_t RF69_Init()
 	{
 		return false;
 	}	
-	RF69_SetModeIdle(); // Read		OpMode == 0x04
-						// Write	OpMode 0x04
+	RF69_SetModeIdle(); // Read		RegOpMode == 0x04
+						// Write	RegOpMode 0x04
 						// Read		RegIrqFlags1 == 0x80
 	
 	RF69_WriteReg(REG_FIFOTHRESH_3C,
 						RF_FIFOTHRESH_TXSTART_FIFONOTEMPTY
 						| RF_FIFOTHRESH_DEF); // thresh 15 is default
-						// Write	RegFifoThresh 0x80
+						// Write	RegFifoThresh 0x80 ? 0x8F
 	
 	RF69_WriteReg(REG_TESTDAGC_6F, RF_DAGC_IMPROVED_LOWBETA0);
 						// Write	RegTestDagc 0x30
@@ -948,8 +948,6 @@ void RF69_SendVariablePacket(const uint8_t* data, uint8_t len)
 		return;
 	}
 	static uint8_t size;
-	LED_BLUE_ON;
-	DBG_ON;
 	
 	RF69_PacketMode(_PACKET_VARIABLE); //Switch the packet reception mode to Variable mode
 												//Переключаем режим приема пакетов в Variable mode
@@ -1109,6 +1107,42 @@ void RF69_Send_DIO1(void)
 void RF69_Interrupt_DIO0(void)
 {
 	_flagIRQ_DIO0 = true;
+	if(_PacketMode == _PACKET_FIXED)
+	{
+/*		if(_mode == RF69_ModeRx)
+		{
+			_lastRssi = -((int8_t)(RF69_ReadReg(REG_RSSIVALUE_24) >> 1));
+			RF69_ReadMultipleReg(REG_FIFO_00, (uint8_t*)&_packetFix, RF69_MAX_FIFO_LENGHT);
+			if(
+//						_packet._header._HeaderTo != _thisAdress 
+						0
+						|| _packetFix._header._HeaderLenght <= RF69_HEADER_LENGHT
+						|| _packetFix._header._HeaderLenght > RF69_MAX_FIFO_LENGHT)
+			{
+				_rxBufValid = false; // RF69_ReadFIFO
+				rxBad++;
+				return;
+			}
+			rxGood++;
+			_rxBufValid = true; // RF69_ReadFIFO
+			RF69_SetModeIdle();// Clears FIFO
+
+		}
+*/
+		if(_mode == RF69_ModeTx)
+		{
+			static uint8_t irqflags2 = 0;
+			irqflags2 = RF69_ReadReg(REG_IRQFLAGS2_28);
+			if (_mode == RF69_ModeTx && (irqflags2 & RF_IRQFLAGS2_PACKETSENT))
+			{
+			// A transmitter message has been fully sent
+				RF69_SetModeIdle();// Clears FIFO
+				txGood++;
+			}
+		}
+		
+	}
+
 //	if(_mode == RF69_ModeRx
 //		&& (_PacketMode == _PACKET_VARIABLE || _PacketMode == _PACKET_UNLIMIT)
 ///*		  && _flag_Rx_Busy*/
@@ -1475,6 +1509,7 @@ void RF69_StopWaitAvailable(void)
 
 void RF69_InterruptHandler(void)
 {
+//	return;
 	if(!_flagIRQ_DIO0 && !_flagIRQ_DIO1)
 	{
 		return;
@@ -1541,8 +1576,16 @@ bool RF69_WaitPacketSent(void)
 
 	while (_mode == RF69_ModeTx && (HAL_GetTick() - startTm) < 200)
 	{
+//		DBG_ON;
+//		DBG_OFF;
+		
 		if(_flagIRQ_DIO0)
 		{
+//			DBG_ON;
+//			DBG_OFF;
+//			DBG_ON;
+//			DBG_OFF;
+
 			RF69_InterruptHandler();
 		}
 		YIELD; // Wait for any previous transmit to finish		
@@ -1555,6 +1598,28 @@ bool RF69_WaitPacketSent(void)
 
 	return true;
 }
+
+//bool RF69_WaitPacketSentTimeout(uint16_t timeout)
+//{
+//	uint32_t startTm = HAL_GetTick();
+
+//	while (_mode == RF69_ModeTx && (HAL_GetTick() - startTm) < 200)
+//	{
+//		if(_flagIRQ_DIO0)
+//		{
+//			RF69_InterruptHandler();
+//		}
+//		YIELD; // Wait for any previous transmit to finish		
+////		osDelay(1);
+//	}
+//	if((HAL_GetTick() - startTm) >= 200) 
+//	{
+//		return false;
+//	}
+
+//	return true;
+//}
+
 void RF69_SetAdressThis(uint8_t adr)
 {
 	RF69_WriteReg(REG_NODEADRS_39, adr);

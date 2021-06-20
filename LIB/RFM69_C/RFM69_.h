@@ -25,10 +25,11 @@ typedef struct
 //	uint8_t		_HeaderVersion;		//Version
 } RF69_HEADER_STRUCT;
 
+#define RF69_MAX_FIX_BUF_LEN (RF69_MAX_FIFO_LENGHT - sizeof(RF69_HEADER_STRUCT))
 typedef struct
 {
 	RF69_HEADER_STRUCT _header;
-	uint8_t _data[RF69_MAX_FIFO_LENGHT - sizeof(RF69_HEADER_STRUCT)];
+	uint8_t _data[RF69_MAX_FIX_BUF_LEN];
 } RF69_FIX_PACKET;
 /******************************************************************************/
 #if _ENABLE_VAR_PACKET ==1U

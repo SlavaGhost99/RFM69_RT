@@ -58,13 +58,21 @@ typedef StaticSemaphore_t osStaticMutexDef_t;
 extern const uint8_t _LMessage[256];
 uint8_t buf[RF69_MAX_FIFO_LENGHT];
 #endif
-#if _APP_MODE == 2U //Fixed Packet
+#if _APP_MODE == 2U //Var Packet
 extern const uint8_t _LMessage[256];
 uint8_t buf[256];
 #endif
-#if _APP_MODE == 3U //Fixed Packet
+#if _APP_MODE == 3U //Unlim Packet
 extern const uint8_t  _UMessage[512];
 uint8_t buf[512];
+#endif
+#if _APP_MODE == 4U //Fixed Packet with ACK
+extern const uint8_t _LMessage[256];
+uint8_t buf[RF69_MAX_FIFO_LENGHT];
+#endif
+#if _APP_MODE == 5U //Var Packet with ACK
+extern const uint8_t _LMessage[256];
+uint8_t buf[256];
 #endif
 
 /* USER CODE END Variables */
@@ -253,6 +261,7 @@ void StartRadioTask(void *argument)
 	DBG_ON;
 	DBG_OFF;
 	  RF69_PacketMode(_PACKET_FIXED);
+//		RF69_WaitPacketSent();
 		_flag = RF69_Send ((uint8_t*)_LMessage, 28);
 		_all++;
 		if(_flag)
@@ -308,13 +317,42 @@ void StartRadioTask(void *argument)
 		_percent = _bad/((float)_all/100);
         
 #endif
+#if _APP_MODE == 4U //Fix Packet with ACK
+		_all++;
+		_flag = SendFixACK((uint8_t*)_LMessage, 24);
+		if(_flag)
+		{
+			LED_GREEN_ON;
+		}
+		else
+		{
+			LED_RED_ON;
+		}
+		
+#endif
+		
+#if _APP_MODE == 5U //Var Packet with ACK
+		_all++;
+		_flag = SendVarACK((uint8_t*) _LMessage, 230);
+		if(_flag)
+		{
+			LED_GREEN_ON;
+		}
+		else
+		{
+			LED_RED_ON;
+		}
+#endif
+/******************************************************************************/
+
 		osDelay(20);
 		LED_BLUE_OFF;
 		LED_GREEN_OFF;
 		LED_RED_OFF;
 		LED_YELL_OFF;
-		osDelay(180);
+		osDelay(300);
   }
+
   /* USER CODE END StartRadioTask */
 }
 

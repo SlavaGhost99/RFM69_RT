@@ -1,0 +1,60 @@
+//RF69_Init()
+// Write	RegSyncValue1		0xAA
+// Read		RegSyncValue1		0xAA
+// Write	RegSyncValue1		0x55
+// Read		RegSyncValue1		0x55
+// Read		RegVersion ==		0x24
+// Write	RegOpMode		0x04
+// Read		RegIrqFlags1 ==		0x80
+// Write	RegFifoThresh		0x80
+// Write	RegTestDagc		0x30
+// Write	RegTestPa1		0x55
+// Write	RegTestPa2		0x5D
+// Read		RegSyncConfig ==	0x98
+// Write	RegSyncValue1		0xAA
+// Write	RegSyncValue2		0xD4
+// Write	RegSyncValue3		0x55
+// Write	RegSyncConfig		0x90
+// Write	RegDataModul		0x01
+// Write	RegBitrateMsb		0x01
+// Write	RegBitrateLsb		0x00
+// Write	RegFdevMsb		0x08
+// Write	RegFdevMsb		0x00
+// Write	RegRxBw			0xE1 ?
+// Write	RegAfcBw		0xE1
+// Write	RegPacketConfig1	0xD0
+// Write	RegPayloadLength	0x42
+// Write	RegPreambleMsb		0x00
+// Write	RegPreambleLsb		0x40
+// Write	RegFrfMsb		0xD8
+// Write	RegFrfMid		0xC0
+// Write	RegFrfLsb		0x00
+// Read 	RegPacketConfig2 ==	0x02
+// Write	RegPacketConfig2	0x02
+// Write	RegPaLevel		0x7F
+// Write	RegNodeAdrs		0x05
+
+//RF69_PacketMode(_PACKET_MODE isLong)
+// Read		RegPacketConfig1 ==	0xD0
+// Write	RegPayloadLength	0xFF
+// Write	RegFifoThresh		0x20
+// Write	RegPacketConfig1	0xC0
+
+//RF69_SendVariablePacket(const uint8_t* data, uint8_t len)
+// Write	RegFifoThresh		0x20
+// Write	RegFifo			...
+	//RF69_SetModeTx(void)
+	// Write	RegTestPa1		0x5D
+	// Write	RegTestPa2		0x7C
+	// Write	RegDioMapping1		0x5D
+	// Write	RegTestPa2		0x7C
+		//RF69_SetOpMode(uint8_t mode)
+		// Read	RegOpMode ==		0x04
+		// Write	RegOpMode	0x0C
+
+//RF69_Send_DIO1(void)
+// Write	RegFifo			...
+
+
+
+

@@ -22,7 +22,7 @@
 //<5=> Variable Packet with ACK
 //<6=> Unlimited Packet with ACK
 
-#define _APP_MODE 2U
+#define _APP_MODE 5U
 
 
 

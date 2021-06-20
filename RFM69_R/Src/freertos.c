@@ -59,13 +59,23 @@ extern const uint8_t _LMessage[256];
 uint8_t buf[RF69_MAX_FIFO_LENGHT];
 uint8_t lenghtBuf;
 #endif
-#if _APP_MODE == 2U //Fixed Packet
+#if _APP_MODE == 2U //Var Packet
 extern const uint8_t _LMessage[256];
 uint8_t buf[256];
 #endif
-#if _APP_MODE == 3U //Fixed Packet
+#if _APP_MODE == 3U //Unlim Packet
 extern const uint8_t  _UMessage[512];
 uint8_t buf[512];
+#endif
+#if _APP_MODE == 4U //Fixed Packet with ACK
+extern const uint8_t _LMessage[256];
+uint8_t buf[RF69_MAX_FIFO_LENGHT];
+uint8_t lenghtBuf;
+#endif
+#if _APP_MODE == 5U //Fixed Packet with ACK
+extern const uint8_t _LMessage[256];
+uint8_t buf[RF69_MAX_FIFO_LENGHT];
+uint8_t lenghtBuf;
 #endif
 
 
@@ -349,6 +359,39 @@ void StartRadioTask(void *argument)
 		_percent = _bad/((float)_all/100);
         
 #endif
+
+#if _APP_MODE == 4U //Fix Packet with ACK
+		lenghtBuf = RF69_MAX_FIX_BUF_LEN;
+		_flag = RecevFixACK((uint8_t*)buf, &lenghtBuf);
+		if(_flag)
+		{
+			LED_GREEN_ON;
+		}
+		else
+		{
+			LED_RED_ON;
+		}
+
+#endif
+#if _APP_MODE == 5U //Var Packet with ACK
+		lenghtBuf = 255;
+		_flag = RecevVarACK((uint8_t*)buf, &lenghtBuf);
+		if(_flag)
+		{
+			LED_YELL_ON;
+			_flag = memcmp((uint8_t*)buf, _LMessage, lenghtBuf);
+			if(_flag == 0)
+			{
+				LED_GREEN_ON;
+			}
+			
+		}
+		else
+		{
+			LED_RED_ON;
+		}
+
+#endif
 		osDelay(20);
 		LED_BLUE_OFF;
 		LED_GREEN_OFF;
@@ -374,7 +417,10 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
   /* Prevent unused argument(s) compilation warning */
 	if(GPIO_Pin == DIO0_Pin)
 	{
-		RF69_Interrupt_DIO0();
+		if(HAL_GPIO_ReadPin(DIO0_GPIO_Port, DIO0_Pin) == SET)
+		{
+			RF69_Interrupt_DIO0();
+		}
 	}
 	if(GPIO_Pin == DIO1_Pin)
 	{

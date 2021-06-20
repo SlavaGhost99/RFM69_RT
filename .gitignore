@@ -45,3 +45,8 @@ RFM69_T/MDK-ARM/*
 /RFM69_T/Middlewares/*
 /LIB/BASE_IO/_spi_wrapp.cpp
 /LIB/BASE_IO/_spi_wrapp.h
+/RFM69_T/MXTmpFiles/*
+/RFM69_T/Inc/tmp
+*.ftl
+*.h_save
+*.ftl_save
