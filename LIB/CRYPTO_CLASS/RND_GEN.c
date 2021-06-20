@@ -108,3 +108,10 @@ int32_t GenRNG32(uint32_t* buf, uint16_t len)
 	}
 	return RNGfree(&RNGstate);
 }
+
+uint32_t rand32(void)
+{
+	uint32_t r;
+	GenRNG32(&r, 1);
+	return r;
+}

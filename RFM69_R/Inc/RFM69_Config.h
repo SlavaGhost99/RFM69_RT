@@ -1,12 +1,16 @@
 /******************************************************************************/
 //Start File
 // Header: 
-// File Name:
+// File Name: RFM69_Config.h
 // Author: 
-// Date:
+// Date: 2021.06.06
 /******************************************************************************/
 #ifndef ___RFM69_CONFIG_INC
 #define ___RFM69_CONFIG_INC
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 //Start File
 
@@ -124,6 +128,11 @@
 
 #endif
 /******************************************************************************/
+
+
+#ifdef __cplusplus
+}
+#endif
 #endif //___RFM69_CONFIG_INC
 
 //End File

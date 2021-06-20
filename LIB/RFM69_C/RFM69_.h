@@ -3,8 +3,8 @@
 // Author:
 // Date: 2020.04.12
 /******************************************************************************/
-#ifndef ___RFM69_C_H___
-#define ___RFM69_C_H___
+#ifndef ___RFM69_C_H_INC
+#define ___RFM69_C_H_INC
 //Start file
 
 #define RF69_WRITE_MASK		0x80
@@ -16,6 +16,9 @@
 #include "BASE_DEF.h"
 #include "RFM69registers.h"
 #include "RFM69_Config.h"
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef struct
 {
@@ -81,10 +84,6 @@ typedef struct
 
 #define RF69_MAX_FILE_SIZE				255
 /******************************************************************************/
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 /******************************************************************************/
 //Interrupts
@@ -484,9 +483,8 @@ bool RF69_WaitPacketSent(void);
 void RF69_PacketMode(_PACKET_MODE isLong);
 
 
-
 #ifdef __cplusplus
 }
 #endif
 //End file
-#endif //___RFM69_C_H___
+#endif //___RFM69_C_H_INC

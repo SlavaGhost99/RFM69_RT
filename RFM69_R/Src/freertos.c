@@ -266,6 +266,8 @@ void StartRadioTask(void *argument)
 	volatile static bool _flag= 0;
 	for(;;)
 	{
+		osMutexWait(RF_MutexHandle, osWaitForever);
+
 #if _APP_MODE == 1U //Fixed Packet
 	DBG_ON;
 	DBG_OFF;
@@ -370,11 +372,23 @@ void StartRadioTask(void *argument)
 		_flag = RecevFixACK((uint8_t*)buf, &lenghtBuf);
 		if(_flag)
 		{
-			LED_GREEN_ON;
+			LED_YELL_ON;
+			_flag = memcmp((uint8_t*)buf, _LMessage, lenghtBuf);
+			if(_flag == 0)
+			{
+				LED_GREEN_ON;
+				_good++;
+			}
+			else
+			{
+				_bad++;
+			}
+			
 		}
 		else
 		{
 			LED_RED_ON;
+			_bad++;
 		}
 
 #endif
@@ -388,12 +402,18 @@ void StartRadioTask(void *argument)
 			if(_flag == 0)
 			{
 				LED_GREEN_ON;
+				_good++;
+			}
+			else
+			{
+				_bad++;
 			}
 			
 		}
 		else
 		{
 			LED_RED_ON;
+			_bad++;
 		}
 
 #endif
@@ -407,15 +427,22 @@ void StartRadioTask(void *argument)
 			if(_flag == 0)
 			{
 				LED_GREEN_ON;
+				_good++;
+			}
+			else
+			{
+				_bad++;
 			}
 			
 		}
 		else
 		{
 			LED_RED_ON;
+			_bad++;
 		}
 
 #endif
+		osMutexRelease(RF_MutexHandle);
 		osDelay(20);
 		LED_BLUE_OFF;
 		LED_GREEN_OFF;

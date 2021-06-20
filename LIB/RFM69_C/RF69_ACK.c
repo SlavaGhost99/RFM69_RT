@@ -10,6 +10,11 @@
 #include "CRC_GEN.h"
 
 /******************************************************************************/
+#define _MAX_WAIT_SEND		100 //время ожидания окончания передачи
+								//transmission end timeout
+#define _MAX_WAIT_RECV		100 //время ожидания окончания приема
+								//waiting time for the end of receive
+/******************************************************************************/
 typedef struct 
 {
 	volatile uint16_t lenght;
@@ -17,12 +22,6 @@ typedef struct
 	volatile uint8_t flags;
 	volatile uint32_t crc;
 	volatile uint32_t sessionRand;
-//	volatile uint8_t reserved8_0;
-//	volatile uint8_t reserved8_1;
-//	volatile uint16_t reserved16_0;
-//	volatile uint16_t reserved16_1;
-//	volatile uint32_t reserved32_0;
-//	volatile uint32_t reserved32_1;
 }_ACK;
 
 typedef struct
@@ -148,7 +147,7 @@ bool SendVarACK(const uint8_t *buf, uint8_t len)
 	cnt = 0;
 	while(_flag_Tx_Busy)
 	{
-		if(cnt >100)
+		if(cnt > _MAX_WAIT_SEND)
 		{
 			RF69_SetModeIdle();
 			return false;
@@ -180,7 +179,7 @@ bool SendUnlimACK(const uint8_t *buf, uint16_t len)
 	cnt = 0;
 	while(_flag_Tx_Busy)
 	{
-		if(cnt >100)
+		if(cnt > _MAX_WAIT_SEND)
 		{
 			RF69_SetModeIdle();
 			return false;
@@ -188,7 +187,7 @@ bool SendUnlimACK(const uint8_t *buf, uint16_t len)
 		cnt++;
 		osDelay(1);
 	}
-	osDelay(5);
+//	osDelay(5);
 //	return 0;
 	return ReceiveACK ((_HEADER_ACK_PACK*)&_unlim_pack._header, (uint8_t*)buf);
 }
@@ -220,7 +219,7 @@ bool RecevFixACK(uint8_t *buf, uint8_t *len)
 		return false;
 	}
 	
-	osDelay(10);
+	osDelay(rand32()%20 + 5);
 	memcpy(buf, _fix_pack._packet, _fix_pack._header.lenght);
 	*len = _fix_pack._header.lenght;
 	//Посылка подтверждения
@@ -245,7 +244,7 @@ bool RecevVarACK(uint8_t *buf, uint8_t *len)
 	cnt = 0;
 	while(_flag_Rx_Busy)
 	{
-		if(cnt >100)
+		if(cnt > _MAX_WAIT_RECV)
 		{
 			RF69_SetModeIdle();
 			return false;
@@ -266,7 +265,7 @@ bool RecevVarACK(uint8_t *buf, uint8_t *len)
 	}
 	memcpy(buf, (uint8_t*)_var_pack._packet, _var_pack._header.lenght);
 	*len = _fix_pack._header.lenght;
-	osDelay(10);
+	osDelay(rand32()%20 + 5);
 	//Посылка подтверждения
 	return SendACK((_HEADER_ACK_PACK*)&_var_pack._header, (uint8_t*)&_var_pack._packet);
 
@@ -288,9 +287,9 @@ bool RecevUnlimACK(uint8_t *buf, uint16_t *len)
 		return false;
 	}
 	cnt = 0;
-	while(_flag_Rx_Busy)
+	while(_flag_Rx_Busy) //Ожидание окончания приема
 	{
-		if(cnt >100)
+		if(cnt > _MAX_WAIT_RECV)
 		{
 			RF69_SetModeIdle();
 			return false;
@@ -311,7 +310,7 @@ bool RecevUnlimACK(uint8_t *buf, uint16_t *len)
 	}
 	memcpy(buf, (uint8_t*)_unlim_pack._packet, _unlim_pack._header.lenght);
 	*len = _fix_pack._header.lenght;
-	osDelay(10);
+	osDelay(rand32()%20 + 5);
 	//Посылка подтверждения
 	return SendACK((_HEADER_ACK_PACK*)&_unlim_pack._header, (uint8_t*)&_unlim_pack._packet);
 
@@ -330,7 +329,7 @@ bool ReceiveACK(_HEADER_ACK_PACK *header, uint8_t *buf)
 {
 	RF69_PacketMode(_PACKET_FIXED);
 	MakeACK(header, buf, (_ACK*)&_ackSnd);
-	if(!RF69_WaitAvailableTimeout(1000))
+	if(!RF69_WaitAvailableTimeout(100))
 	{
 		return false;
 	}

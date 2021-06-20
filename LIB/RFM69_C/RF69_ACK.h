@@ -14,7 +14,9 @@
 //include files
 #include <stdbool.h>
 #include "main.h"
-
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /******************************************************************************/
 
@@ -65,6 +67,10 @@ bool RecevUnlimACK(uint8_t *buf, uint16_t *len);
 //Var
 
 /******************************************************************************/
+
+#ifdef __cplusplus
+}
+#endif
 #endif //___RF69_ACK_INC
 
 //End File

@@ -1,0 +1,31 @@
+
+1. Select user SPI and TIM in file RFM69_Config.h
+
+
+2. Add function:
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+  /* Prevent unused argument(s) compilation warning */
+	if(GPIO_Pin == DIO0_Pin)
+	{
+		if(HAL_GPIO_ReadPin(DIO0_GPIO_Port, DIO0_Pin) == SET)
+		{
+			RF69_Interrupt_DIO0();
+		}
+	}
+	if(GPIO_Pin == DIO1_Pin)
+	{
+		
+		if(HAL_GPIO_ReadPin(DIO1_GPIO_Port, DIO1_Pin) == RESET)
+		{
+			RF69_Interrupt_DIO1_Falling();
+		}
+		else
+		{
+			RF69_Interrupt_DIO1_Rising();
+		}
+	}
+	
+  UNUSED(GPIO_Pin);
+ 
+}

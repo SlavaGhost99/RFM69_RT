@@ -155,20 +155,20 @@ __weak void vPortSuppressTicksAndSleep( TickType_t xExpectedIdleTime )
   * @retval None
   */
 void MX_FREERTOS_Init(void) {
-  /* USER CODE BEGIN Init */
+	/* USER CODE BEGIN Init */
 
-  /* USER CODE END Init */
-  /* Create the mutex(es) */
-  /* creation of RF_Mutex */
-  RF_MutexHandle = osMutexNew(&RF_Mutex_attributes);
+	/* USER CODE END Init */
+	/* Create the mutex(es) */
+	/* creation of RF_Mutex */
+	RF_MutexHandle = osMutexNew(&RF_Mutex_attributes);
 
-  /* USER CODE BEGIN RTOS_MUTEX */
-  /* add mutexes, ... */
-  /* USER CODE END RTOS_MUTEX */
+	/* USER CODE BEGIN RTOS_MUTEX */
+	/* add mutexes, ... */
+	/* USER CODE END RTOS_MUTEX */
 
-  /* USER CODE BEGIN RTOS_SEMAPHORES */
-  /* add semaphores, ... */
-  /* USER CODE END RTOS_SEMAPHORES */
+	/* USER CODE BEGIN RTOS_SEMAPHORES */
+	/* add semaphores, ... */
+	/* USER CODE END RTOS_SEMAPHORES */
 
   /* Create the timer(s) */
   /* creation of RequRadioTimer */
@@ -259,13 +259,13 @@ void StartRadioTask(void *argument)
 	volatile static float _percent = 0;
 	
 	volatile static bool _flag= 0;
-   for(;;)
-  {
+	for(;;)
+	{
+		osMutexWait(RF_MutexHandle, osWaitForever);
 #if _APP_MODE == 1U //Fixed Packet
-	DBG_ON;
-	DBG_OFF;
-	  RF69_PacketMode(_PACKET_FIXED);
-//		RF69_WaitPacketSent();
+		DBG_ON;
+		DBG_OFF;
+		RF69_PacketMode(_PACKET_FIXED);
 		_flag = RF69_Send ((uint8_t*)_LMessage, 28);
 		_all++;
 		if(_flag)
@@ -279,13 +279,13 @@ void StartRadioTask(void *argument)
 			_bad;
 		}
 		_percent = _bad/((float)_all/100);
-        
+
 #endif
 #if _APP_MODE == 2U //Variable Packet
 //		_flag = RF69_WaitAvailableTimeout(100);
 		const  uint8_t size = 253;
 		_all++;
-	  RF69_PacketMode(_PACKET_VARIABLE);
+		RF69_PacketMode(_PACKET_VARIABLE);
 		RF69_SendVariablePacket ((uint8_t*)_LMessage, size);
 		if(_flag)
 		{
@@ -327,10 +327,12 @@ void StartRadioTask(void *argument)
 		if(_flag)
 		{
 			LED_GREEN_ON;
+			_good++;
 		}
 		else
 		{
 			LED_RED_ON;
+			_bad++;
 		}
 		
 #endif
@@ -341,10 +343,12 @@ void StartRadioTask(void *argument)
 		if(_flag)
 		{
 			LED_GREEN_ON;
+			_good++;
 		}
 		else
 		{
 			LED_RED_ON;
+			_bad++;
 		}
 #endif
 #if _APP_MODE == 6U //Unlim Packet with ACK
@@ -353,13 +357,16 @@ void StartRadioTask(void *argument)
 		if(_flag)
 		{
 			LED_GREEN_ON;
+			_good++;
 		}
 		else
 		{
 			LED_RED_ON;
+			_bad++;
 		}
 #endif
 /******************************************************************************/
+		osMutexRelease(RF_MutexHandle);
 
 		osDelay(20);
 		LED_BLUE_OFF;
