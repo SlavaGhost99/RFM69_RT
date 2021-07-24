@@ -16,7 +16,7 @@
 //*** <<< Use Configuration Wizard in Context Menu >>> ***
 // <h> Packet Mode Select
 	// <e> Using VARIABLE PACKET
-	#define _ENABLE_VAR_PACKET 0U
+	#define _ENABLE_VAR_PACKET 1U
 	// </e>
 	
 	// <e> Using UNLIMIT Packet
@@ -32,6 +32,7 @@
 	#define RF_FIFOTHRESH_MAX 32
 	
 // </h>
+
 
 // <h>	Select SPI
 	//<o> Using SPI
@@ -58,6 +59,9 @@
 	//<11=> TIM11
 	#define _TIM_SELECT 10U
 
+	//<o> Set Timer delay (mS)
+	//<20-1000>
+	#define _TIMER_RF69_WD_DELAY	100U
 //</h>
 //<h> Select Adress
 	//<o> This Adress
@@ -66,6 +70,7 @@
 	//<o> To Adres 
 	//<1-254>
 	#define _DEFAULT_TO_ADR		6U
+	
 //</h>	
 	
 	
@@ -116,7 +121,7 @@
 #elif _TIM_SELECT == 9U
 #define _TIMER_WATCH_HANDLE htim9
 #elif _TIM_SELECT == 10U
-#define _TIMER_WATCH_HANDLE htim10
+#define _TIMER_WATCH_HANDLE (htim10)
 #elif _TIM_SELECT == 11U
 #define _TIMER_WATCH_HANDLE htim11
 #else 

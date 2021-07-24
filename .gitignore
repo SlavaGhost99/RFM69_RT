@@ -50,3 +50,5 @@ RFM69_T/MDK-ARM/*
 *.ftl
 *.h_save
 *.ftl_save
+/LIB/BASE_IO/SPI_BASE.c
+/LIB/BASE_IO/SPI_BASE.h

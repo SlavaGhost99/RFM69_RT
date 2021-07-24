@@ -77,9 +77,9 @@ void Error_Handler(void);
 #define DIO0_Pin GPIO_PIN_10
 #define DIO0_GPIO_Port GPIOA
 #define DIO0_EXTI_IRQn EXTI15_10_IRQn
-#define DIO1_Pin GPIO_PIN_11
-#define DIO1_GPIO_Port GPIOA
-#define DIO1_EXTI_IRQn EXTI15_10_IRQn
+#define DIO1_Pin GPIO_PIN_3
+#define DIO1_GPIO_Port GPIOB
+#define DIO1_EXTI_IRQn EXTI3_IRQn
 /* USER CODE BEGIN Private defines */
 #ifdef LED1_Pin
 #define LED1_ON			HAL_GPIO_WritePin(LED1_GPIO_Port,LED1_Pin , GPIO_PIN_RESET)

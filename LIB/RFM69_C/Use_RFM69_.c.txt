@@ -2,7 +2,7 @@
 1. Select user SPI and TIM in file RFM69_Config.h
 
 
-2. Add function:
+2. Add function in file freertos.c:
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
   /* Prevent unused argument(s) compilation warning */
@@ -29,3 +29,13 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
   UNUSED(GPIO_Pin);
  
 }
+
+3. Add in HAL_TIM_PeriodElapsedCallback (main.c) function call:
+
+	/* USER CODE BEGIN Callback 0 */
+	if(htim->Instance == _TIMER_WATCH_HANDLE.Instance)
+	{
+	}
+
+	/* USER CODE END Callback 0 */
+

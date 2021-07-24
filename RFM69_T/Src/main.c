@@ -29,7 +29,8 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "RFM69_Config.h"
+#include "RFM69_.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -144,7 +145,7 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.PLL.PLLM = 25;
   RCC_OscInitStruct.PLL.PLLN = 160;
   RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
-  RCC_OscInitStruct.PLL.PLLQ = 4;
+  RCC_OscInitStruct.PLL.PLLQ = 5;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
     Error_Handler();
@@ -185,13 +186,16 @@ void SystemClock_Config(void)
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
   /* USER CODE BEGIN Callback 0 */
+	if(htim->Instance == _TIMER_WATCH_HANDLE.Instance)
+	{
+		RF69_CallbackWatchTimer();
+	}
 
   /* USER CODE END Callback 0 */
   if (htim->Instance == TIM11) {
     HAL_IncTick();
   }
   /* USER CODE BEGIN Callback 1 */
-
   /* USER CODE END Callback 1 */
 }
 
@@ -206,6 +210,7 @@ void Error_Handler(void)
   __disable_irq();
   while (1)
   {
+//	  printf("Wrong parameters value: file %s on line %d\r\n", "file", 1) ;
   }
   /* USER CODE END Error_Handler_Debug */
 }

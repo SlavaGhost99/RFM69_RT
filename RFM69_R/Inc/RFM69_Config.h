@@ -61,7 +61,10 @@ extern "C" {
 	//<10=> TIM10
 	//<11=> TIM11
 	#define _TIM_SELECT 10U
-
+	
+	//<o> Set Timer delay (mS)
+	//<20-1000>
+	#define _TIMER_RF69_WD_DELAY	100U
 //</h>
 //<h> Select Adress
 	//<o> This Adress

@@ -32,6 +32,7 @@
 #include "RFM69_.h"
 #include "RF69_ACK.h"
 #include "RND_GEN.h"
+#include "TIMER_C.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -155,20 +156,20 @@ __weak void vPortSuppressTicksAndSleep( TickType_t xExpectedIdleTime )
   * @retval None
   */
 void MX_FREERTOS_Init(void) {
-	/* USER CODE BEGIN Init */
+  /* USER CODE BEGIN Init */
 
-	/* USER CODE END Init */
-	/* Create the mutex(es) */
-	/* creation of RF_Mutex */
-	RF_MutexHandle = osMutexNew(&RF_Mutex_attributes);
+  /* USER CODE END Init */
+  /* Create the mutex(es) */
+  /* creation of RF_Mutex */
+  RF_MutexHandle = osMutexNew(&RF_Mutex_attributes);
 
-	/* USER CODE BEGIN RTOS_MUTEX */
+  /* USER CODE BEGIN RTOS_MUTEX */
 	/* add mutexes, ... */
-	/* USER CODE END RTOS_MUTEX */
+  /* USER CODE END RTOS_MUTEX */
 
-	/* USER CODE BEGIN RTOS_SEMAPHORES */
+  /* USER CODE BEGIN RTOS_SEMAPHORES */
 	/* add semaphores, ... */
-	/* USER CODE END RTOS_SEMAPHORES */
+  /* USER CODE END RTOS_SEMAPHORES */
 
   /* Create the timer(s) */
   /* creation of RequRadioTimer */
@@ -263,8 +264,6 @@ void StartRadioTask(void *argument)
 	{
 		osMutexWait(RF_MutexHandle, osWaitForever);
 #if _APP_MODE == 1U //Fixed Packet
-		DBG_ON;
-		DBG_OFF;
 		RF69_PacketMode(_PACKET_FIXED);
 		_flag = RF69_Send ((uint8_t*)_LMessage, 28);
 		_all++;
@@ -368,13 +367,20 @@ void StartRadioTask(void *argument)
 /******************************************************************************/
 		osMutexRelease(RF_MutexHandle);
 
+//		_timer_c_StartTimer(10000);
 		osDelay(20);
+//		_timer_c_StartTimer(5000);
+// 		_timer_c_StopTimer();
+//		DBG_ON;
+//		DBG_OFF;
+//		DBG_ON;
+//		DBG_OFF;
 		LED_BLUE_OFF;
 		LED_GREEN_OFF;
 		LED_RED_OFF;
 		LED_YELL_OFF;
 		osDelay(300);
-  }
+ }
 
   /* USER CODE END StartRadioTask */
 }

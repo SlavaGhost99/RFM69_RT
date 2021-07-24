@@ -265,21 +265,20 @@ extern CRC_HandleTypeDef hcrc;
 static uint8_t bFlagUseSPI;
 
 /******************************************************************************/
-void RF69_StartTimer(uint16_t delay);
-void RF69_StopTimer(void);
-
+//void RF69_StartTimer(uint16_t delay);
+//void RF69_StopTimer(void);
 /******************************************************************************/
-void RF69_StartTimer(uint16_t delay)
-{
-	_TIMER_WATCH_HANDLE.Instance->ARR = delay;
-	_TIMER_WATCH_HANDLE.Instance->EGR |= TIM_EGR_UG;
-	HAL_TIM_Base_Start_IT(&_TIMER_WATCH_HANDLE);
-}
+//void RF69_StartTimer(uint16_t delay)
+//{
+//	_TIMER_WATCH_HANDLE.Instance->ARR = delay;
+//	_TIMER_WATCH_HANDLE.Instance->EGR |= TIM_EGR_UG;
+//	HAL_TIM_Base_Start_IT(&_TIMER_WATCH_HANDLE);
+//}
 
-void RF69_StopTimer()
-{
-	HAL_TIM_Base_Stop_IT(&_TIMER_WATCH_HANDLE);
-}
+//void RF69_StopTimer()
+//{
+//	HAL_TIM_Base_Stop_IT(&_TIMER_WATCH_HANDLE);
+//}
 
 //static uint8_t _LastErrorSPI;
 #if (USE_HAL_SPI_REGISTER_CALLBACKS == 1U)
@@ -306,10 +305,22 @@ void RF69_StopTimer()
 }
 #endif
 
-void RF69_TIM_Init()
+void RF69_CallbackWatchTimer()
 {
-	
+//	LED1_ON;
+//	DBG_ON;
+//	DBG_OFF;
+//	DBG_ON;
+//	DBG_OFF;
+//	DBG_ON;
+//	DBG_OFF;
+//	DBG_ON;
+//	DBG_OFF;
+//	DBG_ON;
+//	DBG_OFF;
+	RF69_SetModeIdle();
 }
+
 void RF69_Select()
 {
 //	bFlagUseSPI = 1;
@@ -591,6 +602,9 @@ void RF69_SetModeSleep()
 	}
 }
 
+void RF69_SetModeListenRX()
+{
+}
 
 void RF69_SetTxPower(int8_t power, uint8_t _IsHighPowerModule)
 {
@@ -725,6 +739,8 @@ void RF69_SetFrequency(float freq)
 uint8_t RF69_Init()
 {
 	 DWT_Init();
+	_timer_c_Init(&_TIMER_WATCH_HANDLE);
+	
 	RF69_Reset();
 	static uint8_t startTime = 0;
 	static uint8_t _deviceType;
@@ -914,6 +930,7 @@ void RF69_SendUnlimitedLengthPacket(const uint8_t* data, uint16_t len)
 	
 	_seekPacket = RF69_MAX_FIFO_LENGHT - _LENGHT_UNLIM_PACK_HEADER; //Позиция данных в пакете
 //	RF69_StartTimer(_TIM_WATCH_PERIOD);
+	_timer_c_StartTimer(_TIMER_RF69_WD_DELAY);
 	RF69_WriteMultipleReg(REG_FIFO_00,
 				(uint8_t*)&_unlimPacketSend,
 				size); //Запись в FIFO
@@ -923,6 +940,7 @@ void RF69_SendUnlimitedLengthPacket(const uint8_t* data, uint16_t len)
 	LED_BLUE_OFF;
 	if (len <= RF69_MAX_FIFO_LENGHT -  _LENGHT_UNLIM_PACK_HEADER)
 	{
+//		_timer_c_StopTimer();
 		_flag_Tx_Busy = false;
 		return;
 	}
@@ -975,12 +993,13 @@ void RF69_SendVariablePacket(const uint8_t* data, uint8_t len)
 	RF69_SetModeTx(); // Start the transmitter
 									// Write	RegTestPa1		0x5D
 									// Write	RegTestPa2		0x7C
-	
+	_timer_c_StartTimer(_TIMER_RF69_WD_DELAY);
 	_count_FIFO = RF69_MAX_FIFO_LENGHT - sizeof(_packetVar._header);
 	DBG_OFF;
 	LED_BLUE_OFF;
 	if (len <= RF69_MAX_FIFO_LENGHT -  sizeof(_packetVar._header))
 	{
+//		_timer_c_StopTimer();
 		_flag_Tx_Busy = false;
 		return;
 	}
@@ -1026,8 +1045,8 @@ void RF69_Send_DIO0(void)
 	irqflags2 = RF69_ReadReg(REG_IRQFLAGS2_28);
 	if (irqflags2 & RF_IRQFLAGS2_PACKETSENT)
 	{
-//		RF69_StopTimer();
 	// A transmitter message has been fully sent
+		_timer_c_StopTimer();
 		RF69_SetModeIdle();// Clears FIFO
 		txGood++;
 	}
@@ -1056,12 +1075,13 @@ void RF69_Send_DIO1(void)
 		{
 			size = _packetVar._header._HeaderLenght - _count_FIFO;
 		}
-		RF69_WriteMultipleReg(REG_FIFO_00,
+		RF69_WriteMultipleReg(REG_FIFO_00,		//Write FIFO
 			(uint8_t*)&_packetVar._data[_count_FIFO],
 			size);
-		_count_FIFO += size;
-		if(_count_FIFO == _packetVar._header._HeaderLenght)
+		_count_FIFO += size; 		//Add the size of the transmitted packet to the counter
+		if(_count_FIFO == _packetVar._header._HeaderLenght) //If the counter is equal to the length of the message, then we end
 		{
+			_timer_c_StopTimer(); //Stop Timer
 			_flag_Tx_Busy = false;
 		}
 	}
@@ -1070,12 +1090,7 @@ void RF69_Send_DIO1(void)
 #if _ENABLE_UNLIMIT_PACKET ==1U
 	if(_PacketMode == _PACKET_UNLIMIT) //Если пакет Unlimit
 	{
-//		if(_flag_Tx_End)
-//		{
-//			_flag_Tx_Busy = false;
-//			RF69_SetModeIdle();
-//			return;
-//		}
+
 		if((_unlimPacketSend._header._lenghtData - _count_FIFO) >= RF_FIFOTHRESH_MAX)
 		{
 			//Если оставшийся размер больше FIFOTHRESH_MAX
@@ -1092,9 +1107,8 @@ void RF69_Send_DIO1(void)
 		_count_FIFO += size;
 		if(_count_FIFO == _unlimPacketSend._header._lenghtData)
 		{
-//			RF69_WriteReg(REG_FIFOTHRESH_3C, 0);
-//			_flag_Tx_End = true;
-//			uint8_t dioMap = 
+
+			_timer_c_StopTimer();
 			_flag_Tx_Busy = false;
 		}
 		
@@ -1279,6 +1293,8 @@ void RF69_ReadFIFO_DIO1()
 #if _ENABLE_VAR_PACKET == 1U
 	if(_PacketMode == _PACKET_VARIABLE)
 	{
+		_timer_c_StartTimer(_TIMER_RF69_WD_DELAY);
+
 		if(!_flag_Rx_Busy)
 		{
 			_flag_Rx_Busy = true;
@@ -1305,6 +1321,8 @@ void RF69_ReadFIFO_DIO1()
 	{
 		if(!_flag_Rx_Busy) //Если начало приема
 		{
+			_timer_c_StartTimer(_TIMER_RF69_WD_DELAY);
+			
 			_flag_Rx_Busy = true;
 			_count_FIFO = 0;
 			RF69_ReadMultipleReg(REG_FIFO_00, //Чтение из FIFO Заголовок
@@ -1313,6 +1331,7 @@ void RF69_ReadFIFO_DIO1()
 			//Если длинна данных меньше RF_FIFOTHRESH_MAX
 			if(_unlimPacketSend._header._lenghtData == 0)
 			{
+				_timer_c_StopTimer();
 				RF69_SetModeIdle();
 				_rxBufValid = true; //RF69_ReadFIFO_DIO1
 			}
@@ -1337,6 +1356,8 @@ void RF69_ReadFIFO_DIO1()
 			res = ((_unlimPacketSend._header._lenghtData - _count_FIFO));
 			if(res >= RF_FIFOTHRESH_MAX)
 			{
+				_timer_c_StartTimer(_TIMER_RF69_WD_DELAY);
+				
 				RF69_ReadMultipleReg(REG_FIFO_00,
 					(uint8_t*)&_unlimPacketSend._data[_count_FIFO],
 					RF_FIFOTHRESH_MAX);	
@@ -1351,7 +1372,7 @@ void RF69_ReadFIFO_DIO1()
 						(uint8_t*)&_unlimPacketSend._data[_count_FIFO],
 						size);
 				}
-				
+				_timer_c_StopTimer();
 				RF69_SetModeIdle();
 				RF69_WriteReg(REG_FIFOTHRESH_3C, sizeof(_UNLIM_HEADER)); //Прерывание после приема заголовка
 
@@ -1390,10 +1411,12 @@ void RF69_ReadFIFO_DIO0()
 				(uint8_t*)&_packetVar._data[_count_FIFO],
 				size);	
 		}
+		_timer_c_StopTimer();
 	}
 #endif
 	
 #if _ENABLE_UNLIMIT_PACKET ==1U
+/*
 	if(_PacketMode == _PACKET_UNLIMIT)
 	{
 		if(!_flag_Rx_Busy && _mode == RF69_ModeRx)
@@ -1422,10 +1445,11 @@ void RF69_ReadFIFO_DIO0()
 				(uint8_t*)&_unlimPacketSend._data[_count_FIFO], 
 				size);	
 		}
-		else
-		{
-		}
+//		else
+//		{
+//		}
 	}
+*/
 #endif
 //	HAL_TIM_Base_Stop_IT(&_TIMER_WATCH_HANDLE);
 

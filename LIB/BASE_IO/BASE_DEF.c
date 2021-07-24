@@ -11,7 +11,8 @@
 #include "stm32f4xx_hal_crc.h"
 #include "crypto.h"
 
-#define DWT_CONTROL *(volatile unsigned long *)0xE0001000
+//#define DWT_CONTROL *(volatile unsigned long *)0xE0001000
+#define DWT_CONTROL *(volatile unsigned long *)DWT_BASE
 #define SCB_DEMCR   *(volatile unsigned long *)0xE000EDFC
 extern CRC_HandleTypeDef hcrc;
 

@@ -27,6 +27,7 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN TD */
+extern void RF69_CallbackWatchTimer(void);
 
 /* USER CODE END TD */
 
@@ -59,6 +60,7 @@
 extern DMA_HandleTypeDef hdma_spi2_rx;
 extern DMA_HandleTypeDef hdma_spi2_tx;
 extern SPI_HandleTypeDef hspi2;
+extern TIM_HandleTypeDef htim10;
 extern TIM_HandleTypeDef htim11;
 
 /* USER CODE BEGIN EV */
@@ -164,6 +166,20 @@ void DebugMon_Handler(void)
 /******************************************************************************/
 
 /**
+  * @brief This function handles EXTI line3 interrupt.
+  */
+void EXTI3_IRQHandler(void)
+{
+  /* USER CODE BEGIN EXTI3_IRQn 0 */
+
+  /* USER CODE END EXTI3_IRQn 0 */
+  HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_3);
+  /* USER CODE BEGIN EXTI3_IRQn 1 */
+
+  /* USER CODE END EXTI3_IRQn 1 */
+}
+
+/**
   * @brief This function handles DMA1 stream3 global interrupt.
   */
 void DMA1_Stream3_IRQHandler(void)
@@ -189,6 +205,25 @@ void DMA1_Stream4_IRQHandler(void)
   /* USER CODE BEGIN DMA1_Stream4_IRQn 1 */
 
   /* USER CODE END DMA1_Stream4_IRQn 1 */
+}
+
+/**
+  * @brief This function handles TIM1 update interrupt and TIM10 global interrupt.
+  */
+void TIM1_UP_TIM10_IRQHandler(void)
+{
+  /* USER CODE BEGIN TIM1_UP_TIM10_IRQn 0 */
+//		if(htim10.Instance->SR & TIM_IT_UPDATE)
+//		{
+//			HAL_TIM_IRQHandler(&htim10);
+//			RF69_CallbackWatchTimer();
+//			return;
+//		}
+  /* USER CODE END TIM1_UP_TIM10_IRQn 0 */
+  HAL_TIM_IRQHandler(&htim10);
+  /* USER CODE BEGIN TIM1_UP_TIM10_IRQn 1 */
+
+  /* USER CODE END TIM1_UP_TIM10_IRQn 1 */
 }
 
 /**
@@ -228,7 +263,6 @@ void EXTI15_10_IRQHandler(void)
 
   /* USER CODE END EXTI15_10_IRQn 0 */
   HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_10);
-  HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_11);
   /* USER CODE BEGIN EXTI15_10_IRQn 1 */
 
   /* USER CODE END EXTI15_10_IRQn 1 */
