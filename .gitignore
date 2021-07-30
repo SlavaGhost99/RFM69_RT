@@ -32,8 +32,8 @@ _ReSharper*/
 packages/
 RFM69_R/Drivers/*
 RFM69_T/Drivers/*
-RFM69_R/MDK-ARM/*
-RFM69_T/MDK-ARM/*
+#RFM69_R/MDK-ARM/*
+#RFM69_T/MDK-ARM/*
 
 
 
@@ -52,3 +52,18 @@ RFM69_T/MDK-ARM/*
 *.ftl_save
 /LIB/BASE_IO/SPI_BASE.c
 /LIB/BASE_IO/SPI_BASE.h
+*.scvd
+*.crf
+*.d
+*.o
+*.axf
+*.htm
+*.hex
+*.lnp
+*.map
+*.sct
+*.dep
+RTE_Components.h
+*.lst
+*.s
+*.inp
