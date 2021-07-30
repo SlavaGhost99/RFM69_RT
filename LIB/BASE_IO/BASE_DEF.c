@@ -112,8 +112,10 @@ void DWT_Init(void)
 void Delay_uS(uint32_t uS) // DelayMicro
 {
     uint32_t uS_count_tic =  uS * (SystemCoreClock / 1000000);
+	uint32_t _cyccnt = DWT->CYCCNT;
     DWT->CYCCNT = 0U; // обнуляем счётчик
     while(DWT->CYCCNT < uS_count_tic);
+	DWT->CYCCNT = _cyccnt + uS_count_tic;
 }
 
 

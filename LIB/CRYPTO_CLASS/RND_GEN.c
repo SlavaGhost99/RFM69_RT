@@ -5,6 +5,8 @@
 #include "main.h"
 #include <rtc.h>
 #include "RND_GEN.h"
+#define DWT_CONTROL *(volatile unsigned long *)DWT_BASE
+#define SCB_DEMCR   *(volatile unsigned long *)0xE000EDFC
 
 uint8_t const entropy_data[32] = {
                              0x9d, 0x20, 0x1a, 0x18, 0x9b, 0x6d, 0x1a, 0xa7, 0x0e,
@@ -45,17 +47,30 @@ void GetTimeStamp(void);
 
 int32_t InitRND()
 {
+	static bool flag_RNG_Init = 0;
+	
+//	if(!flag_RNG_Init)
+//	{
+		SCB_DEMCR |= CoreDebug_DEMCR_TRCENA_Msk; // разрешаем использовать счётчик
+		DWT_CONTROL |= DWT_CTRL_CYCCNTENA_Msk;   // запускаем счётчик
+//	}
+
 	GetTimeStamp();
 	RNGinit_st.pmEntropyData = (uint8_t*) entropy_data;
 	RNGinit_st.mEntropyDataSize = sizeof(entropy_data);
-	RNGinit_st.pmNonce =  0;
-	RNGinit_st.mNonceSize = 0;
-	RNGinit_st.pmPersData = 0;
-	RNGinit_st.mPersDataSize = 0;
-//	RNGinit_st.pmNonce =  (uint8_t*) nonce;
-//	RNGinit_st.mNonceSize = 4;
-//	RNGinit_st.pmPersData = personalization_String;
-//	RNGinit_st.mPersDataSize = sizeof( personalization_String );
+//	RNGinit_st.pmNonce =  0;
+//	RNGinit_st.mNonceSize = 0;
+//	RNGinit_st.pmPersData = 0;
+//	RNGinit_st.mPersDataSize = 0;
+	uint32_t _cyccnt1 = DWT->CYCCNT;
+	personalization_String[0] ^= _cyccnt1;
+	personalization_String[1] ^= _cyccnt1>>8;
+	personalization_String[2] ^= _cyccnt1>>16;
+	personalization_String[3] ^= _cyccnt1>>24;
+	RNGinit_st.pmNonce =  (uint8_t*) nonce;
+	RNGinit_st.mNonceSize = sizeof(nonce);
+	RNGinit_st.pmPersData = personalization_String;
+	RNGinit_st.mPersDataSize = sizeof( personalization_String );
 
 	status = RNGinit(&RNGinit_st, &RNGstate);
 	return status;
@@ -69,18 +84,25 @@ void GetTimeStamp(void)
 	tr = hrtc.Instance->TR;
 	HAL_RTC_GetTime(&hrtc, (RTC_TimeTypeDef*)&time_str, FORMAT_BIN);
 	pVar = (uint32_t*)nonce;
+	uint32_t* p =(uint32_t*) &pVar[0];
+	*p = tr;
+	nonce[3] = hrtc.Instance->SSR;
 //	nonce[0] = time_str.Hours;
 //	nonce[1] = time_str.Minutes;
-//	nonce[2] = time_str.Seconds;
-	*pVar = tr;
+	static volatile uint32_t _cyccnt = 0;
+	_cyccnt = DWT->CYCCNT;
+	nonce[4] = _cyccnt >> 24U;
+	nonce[5] = _cyccnt >> 16U;
+	nonce[6] = _cyccnt >> 8U;
+	nonce[7] = _cyccnt >> 0U;
 //	pVar = (uint32_t*)&nonce[3];
 //	*pVar = tr = hrtc.Instance->SSR;
-	nonce[3] = hrtc.Instance->SSR;
 }
 
 int32_t GenRNG(uint8_t* buf, uint16_t len)
 {
-//	status = InitRND();
+//	if(RNGstate == 
+	status = InitRND();
 	if(status != RNG_SUCCESS)
 	{
 		return status;
@@ -91,7 +113,7 @@ int32_t GenRNG(uint8_t* buf, uint16_t len)
 	{
 		return status;
 	}
-//	return RNGfree(&RNGstate);
+	return RNGfree(&RNGstate);
 	return status;
 }
 int32_t GenRNG32(uint32_t* buf, uint16_t len)

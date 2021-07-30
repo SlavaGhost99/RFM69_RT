@@ -153,9 +153,9 @@ bool SendVarACK(const uint8_t *buf, uint8_t len)
 			return false;
 		}
 		cnt++;
-		osDelay(1);
+		vTaskDelay(1);
 	}
-	osDelay(5);
+	vTaskDelay(5);
 //	return 0;
 	return ReceiveACK ((_HEADER_ACK_PACK*)&_var_pack._header, (uint8_t*)buf);
 	
@@ -185,9 +185,9 @@ bool SendUnlimACK(const uint8_t *buf, uint16_t len)
 			return false;
 		}
 		cnt++;
-		osDelay(1);
+		vTaskDelay(1);
 	}
-//	osDelay(5);
+//	vTaskDelay(5);
 //	return 0;
 	return ReceiveACK ((_HEADER_ACK_PACK*)&_unlim_pack._header, (uint8_t*)buf);
 }
@@ -219,7 +219,7 @@ bool RecevFixACK(uint8_t *buf, uint8_t *len)
 		return false;
 	}
 	
-	osDelay(rand32()%20 + 5);
+	vTaskDelay(rand32()%20 + 5);
 	memcpy(buf, _fix_pack._packet, _fix_pack._header.lenght);
 	*len = _fix_pack._header.lenght;
 	//Посылка подтверждения
@@ -250,7 +250,7 @@ bool RecevVarACK(uint8_t *buf, uint8_t *len)
 			return false;
 		}
 		cnt++;
-		osDelay(1);
+		vTaskDelay(1);
 	}
 //	return 0;
 	_crcPaket = CalcCRC((uint8_t*)&_var_pack._packet, _var_pack._header.lenght);
@@ -265,7 +265,7 @@ bool RecevVarACK(uint8_t *buf, uint8_t *len)
 	}
 	memcpy(buf, (uint8_t*)_var_pack._packet, _var_pack._header.lenght);
 	*len = _fix_pack._header.lenght;
-	osDelay(rand32()%20 + 5);
+	vTaskDelay(rand32()%20 + 5);
 	//Посылка подтверждения
 	return SendACK((_HEADER_ACK_PACK*)&_var_pack._header, (uint8_t*)&_var_pack._packet);
 
@@ -295,7 +295,7 @@ bool RecevUnlimACK(uint8_t *buf, uint16_t *len)
 			return false;
 		}
 		cnt++;
-		osDelay(1);
+		vTaskDelay(1);
 	}
 //	return 0;
 	_crcPaket = CalcCRC((uint8_t*)&_unlim_pack._packet, _unlim_pack._header.lenght);

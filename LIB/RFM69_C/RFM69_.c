@@ -370,10 +370,10 @@ void RF69_WriteReg(uint8_t reg, uint8_t data)
 	if(bFlagUseSPI)
 	{
 		bFlagUseSPI = false;
-		RF69_Unselect();
+//		RF69_Unselect();
 	}
 
-	RF69_Unselect();
+//	RF69_Unselect();
 	bufTX[0] = reg | RF69_WRITE_MASK;
 	bufTX[1] = data;
 	
@@ -397,8 +397,8 @@ uint8_t RF69_ReadReg(uint8_t reg)
 		if(bFlagUseSPI)
 	{
 		bFlagUseSPI = false;
-		RF69_Unselect();
-		HAL_Delay(1);
+//		RF69_Unselect();
+//		HAL_Delay(1);
 	}
 	reg &= ~0x80;
 
@@ -437,19 +437,19 @@ void RF69_WriteMultipleReg(uint8_t reg, uint8_t *data, uint16_t len)
 
 	if(bFlagUseSPI)
 	{
-//		bIsUseSPI = false;
-		RF69_Unselect();
+		bFlagUseSPI = false;
+//		RF69_Unselect();
 	}
-	bFlagUseSPI = true;
-	RF69_Select();
-	while(_NSS_READ != GPIO_PIN_RESET)
-    {
-		_NSS_ON;
-    }
+//	while(_NSS_READ != GPIO_PIN_RESET)
+//    {
+//		_NSS_ON;
+//    }
 	while(_SPI_DMA_TX_HANDLE.State != HAL_DMA_STATE_READY)
 	{
 		__ASM volatile ("NOP");
 	}
+	bFlagUseSPI = true;
+	RF69_Select();
     
 	reg = reg | RF69_WRITE_MASK;
 	HAL_SPI_Transmit_DMA((SPI_HandleTypeDef*)&_SPI_HANDLE, &reg, 1);
@@ -482,16 +482,16 @@ void RF69_ReadMultipleReg(uint8_t reg, uint8_t *data, uint16_t len)
 	if(bFlagUseSPI)
 	{
 		bFlagUseSPI = false;
-		RF69_Unselect();
+//		RF69_Unselect();
 	}
 	reg &= ~0x80;
-	bFlagUseSPI = true;
-	RF69_Select();
 
 	while(_SPI_DMA_TX_HANDLE.State != HAL_DMA_STATE_READY)
 	{
 		__ASM volatile ("NOP");
 	}
+	bFlagUseSPI = true;
+	RF69_Select();
     
 	HAL_SPI_Transmit_DMA((SPI_HandleTypeDef*)&_SPI_HANDLE, &reg, 1);
 	while(_SPI_DMA_TX_HANDLE.State != HAL_DMA_STATE_READY)
@@ -541,8 +541,12 @@ void RF69_SetOpMode(uint8_t mode)
 
 void RF69_SetModeIdle(void)
 {
+	DBG_TOGLE
+	DBG_TOGLE
+	DBG_TOGLE
     if (_mode != RF69_ModeIdle)
     {
+	DBG_TOGLE
 		if (_power >= 18)
 		{
 			// If high power boost, return power amp to receive mode
@@ -574,6 +578,7 @@ void RF69_SetModeRx(void)
 
 void RF69_SetModeTx(void)
 {
+//	DBG_TOGLE
 	if (_mode != RF69_ModeTx)
 	{
 		if (_power >= 18)
@@ -1007,7 +1012,7 @@ void RF69_SendVariablePacket(const uint8_t* data, uint8_t len)
 	{
 		_flag_Tx_Busy = true;
 	}
-
+	
 }
 #endif
 
@@ -1039,6 +1044,10 @@ bool RF69_Send(const uint8_t* data, uint8_t len)
 
 void RF69_Send_DIO0(void)
 {
+	DBG_TOGLE; DBG_TOGLE; DBG_TOGLE; DBG_TOGLE;
+	
+	
+	
 	_flagIRQ_DIO0 = false;
 	// Get the interrupt cause
 	static uint8_t irqflags2 = 0;
@@ -1145,10 +1154,23 @@ void RF69_Interrupt_DIO0(void)
 */
 		if(_mode == RF69_ModeTx)
 		{
-			static uint8_t irqflags2 = 0;
+			DBG_TOGLE;
+			volatile static uint8_t irqflags2 = 0;
+//			Delay_uS(1);
+			uint8_t cnt = 0;
 			irqflags2 = RF69_ReadReg(REG_IRQFLAGS2_28);
-			if (_mode == RF69_ModeTx && (irqflags2 & RF_IRQFLAGS2_PACKETSENT))
+			while(!(irqflags2 & RF_IRQFLAGS2_PACKETSENT) && cnt <200)
 			{
+			DBG_TOGLE;
+				cnt++;
+				irqflags2 = RF69_ReadReg(REG_IRQFLAGS2_28);
+				
+			}
+			if (/*_mode == RF69_ModeTx &&*/ (irqflags2 & RF_IRQFLAGS2_PACKETSENT))
+			{
+			DBG_TOGLE;
+			DBG_TOGLE;
+				
 			// A transmitter message has been fully sent
 				RF69_SetModeIdle();// Clears FIFO
 				txGood++;
@@ -1187,19 +1209,19 @@ void RF69_Interrupt_DIO0(void)
 
 #endif
 #if _ENABLE_UNLIMIT_PACKET == 1U
-	if(_mode == RF69_ModeRx
-		&& (_PacketMode == _PACKET_UNLIMIT)
-/*		  && _flag_Rx_Busy*/
-		)
-	{
-		RF69_ReadFIFO_DIO0();
-	}
-	if(_mode == RF69_ModeTx
-		&&  (_PacketMode == _PACKET_UNLIMIT)
-		)
-	{
-		RF69_Send_DIO0();
-	}
+//	if(_mode == RF69_ModeRx
+//		&& (_PacketMode == _PACKET_UNLIMIT)
+///*		  && _flag_Rx_Busy*/
+//		)
+//	{
+//		RF69_ReadFIFO_DIO0();
+//	}
+//	if(_mode == RF69_ModeTx
+//		&&  (_PacketMode == _PACKET_UNLIMIT)
+//		)
+//	{
+//		RF69_Send_DIO0();
+//	}
 
 #endif
 }
@@ -1273,7 +1295,7 @@ bool RF69_WaitAvailable(void)
 			_exitWaitAvailable = false;
 			return false;
 		}
-		osDelay(1);
+		vTaskDelay(1);
 //		YIELD;
     }
 	return true;
@@ -1521,7 +1543,7 @@ bool RF69_WaitAvailableTimeout(uint16_t timeout)
 		}
 		YIELD;
 		
-//		osDelay(1);
+//		vTaskDelay(1);
 	}
 	return false;
 }
@@ -1613,7 +1635,7 @@ bool RF69_WaitPacketSent(void)
 			RF69_InterruptHandler();
 		}
 		YIELD; // Wait for any previous transmit to finish		
-//		osDelay(1);
+//		vTaskDelay(1);
 	}
 	if((HAL_GetTick() - startTm) >= 200) 
 	{
@@ -1634,7 +1656,7 @@ bool RF69_WaitPacketSent(void)
 //			RF69_InterruptHandler();
 //		}
 //		YIELD; // Wait for any previous transmit to finish		
-////		osDelay(1);
+////		vTaskDelay(1);
 //	}
 //	if((HAL_GetTick() - startTm) >= 200) 
 //	{
