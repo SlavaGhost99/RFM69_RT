@@ -340,7 +340,7 @@
               <MiscControls></MiscControls>
               <Define>USE_HAL_DRIVER,STM32F411xE</Define>
               <Undefine></Undefine>
-              <IncludePath>..\..\..\..\LIB\STM32_Cryptographic\Inc;       ..\..\LIB\RFM69_C;       ..\..\LIB\BASE_IO;       ../Drivers/STM32F4xx_HAL_Driver/Inc;       ../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy;       ../Middlewares/Third_Party/FreeRTOS/Source/include;       ../Drivers/CMSIS/Device/ST/STM32F4xx/Include;       ../Drivers/CMSIS/Include;       ../Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F;       ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F;       ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS;       ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2;       ..\..\LIB\CRYPTO_CLASS;       ../Core/Inc</IncludePath>
+              <IncludePath>..\..\..\..\LIB\STM32_Cryptographic\Inc;             ..\..\LIB\RFM69_C;             ..\..\LIB\BASE_IO;             ../Drivers/STM32F4xx_HAL_Driver/Inc;             ../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy;             ../Middlewares/Third_Party/FreeRTOS/Source/include;             ../Drivers/CMSIS/Device/ST/STM32F4xx/Include;             ../Drivers/CMSIS/Include;             ../Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F;             ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F;             ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS;             ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2;             ..\..\LIB\CRYPTO_CLASS;             ../Core/Inc</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>

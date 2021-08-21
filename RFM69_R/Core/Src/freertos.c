@@ -39,6 +39,7 @@
 
 /* Private typedef -----------------------------------------------------------*/
 typedef StaticTask_t osStaticThreadDef_t;
+typedef StaticQueue_t osStaticMessageQDef_t;
 typedef StaticSemaphore_t osStaticMutexDef_t;
 typedef StaticSemaphore_t osStaticSemaphoreDef_t;
 /* USER CODE BEGIN PTD */
@@ -106,7 +107,7 @@ const osThreadAttr_t defaultTask_attributes = {
 osThreadId_t InitTaskHandle;
 const osThreadAttr_t InitTask_attributes = {
   .name = "InitTask",
-  .stack_size = 512 * 4,
+  .stack_size = 384 * 4,
   .priority = (osPriority_t) osPriorityHigh,
 };
 /* Definitions for RadioTask */
@@ -138,7 +139,7 @@ const osThreadAttr_t TaskDIO_RF69_attributes = {
   .cb_size = sizeof(DIO_RF69ControlBlock),
   .stack_mem = &DIO_RF69Buffer[0],
   .stack_size = sizeof(DIO_RF69Buffer),
-  .priority = (osPriority_t) osPriorityRealtime,
+  .priority = (osPriority_t) osPriorityHigh,
 };
 /* Definitions for TaskTIM_RF69 */
 osThreadId_t TaskTIM_RF69Handle;
@@ -151,6 +152,29 @@ const osThreadAttr_t TaskTIM_RF69_attributes = {
   .stack_mem = &TaskTIM_RF69Buffer[0],
   .stack_size = sizeof(TaskTIM_RF69Buffer),
   .priority = (osPriority_t) osPriorityHigh1,
+};
+/* Definitions for TaskRF69_Recive */
+osThreadId_t TaskRF69_ReciveHandle;
+uint32_t TaskRF69_ReciveBuffer[ 256 ];
+osStaticThreadDef_t TaskRF69_ReciveControlBlock;
+const osThreadAttr_t TaskRF69_Recive_attributes = {
+  .name = "TaskRF69_Recive",
+  .cb_mem = &TaskRF69_ReciveControlBlock,
+  .cb_size = sizeof(TaskRF69_ReciveControlBlock),
+  .stack_mem = &TaskRF69_ReciveBuffer[0],
+  .stack_size = sizeof(TaskRF69_ReciveBuffer),
+  .priority = (osPriority_t) osPriorityAboveNormal,
+};
+/* Definitions for RF69_RxFlagQ */
+osMessageQueueId_t RF69_RxFlagQHandle;
+uint8_t RF69_RxFlagQBuffer[ 2 * sizeof( uint8_t ) ];
+osStaticMessageQDef_t RF69_RxFlagQControlBlock;
+const osMessageQueueAttr_t RF69_RxFlagQ_attributes = {
+  .name = "RF69_RxFlagQ",
+  .cb_mem = &RF69_RxFlagQControlBlock,
+  .cb_size = sizeof(RF69_RxFlagQControlBlock),
+  .mq_mem = &RF69_RxFlagQBuffer,
+  .mq_size = sizeof(RF69_RxFlagQBuffer)
 };
 /* Definitions for RF_Mutex */
 osMutexId_t RF_MutexHandle;
@@ -181,6 +205,11 @@ const osSemaphoreAttr_t SemTimer_RF69_attributes = {
   .cb_mem = &SemTimer_RF69ControlBlock,
   .cb_size = sizeof(SemTimer_RF69ControlBlock),
 };
+/* Definitions for SemReceiv_RF69 */
+osSemaphoreId_t SemReceiv_RF69Handle;
+const osSemaphoreAttr_t SemReceiv_RF69_attributes = {
+  .name = "SemReceiv_RF69"
+};
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
@@ -194,8 +223,49 @@ void StartRadioTask(void *argument);
 void StartTaskKey(void *argument);
 void StartDIO_RF69(void *argument);
 void StartTaskTIM_RF69(void *argument);
+void StartTaskRF69_Recive(void *argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
+
+/* Hook prototypes */
+void vApplicationIdleHook(void);
+void vApplicationTickHook(void);
+void vApplicationStackOverflowHook(xTaskHandle xTask, signed char *pcTaskName);
+
+/* USER CODE BEGIN 2 */
+void vApplicationIdleHook( void )
+{
+   /* vApplicationIdleHook() will only be called if configUSE_IDLE_HOOK is set
+   to 1 in FreeRTOSConfig.h. It will be called on each iteration of the idle
+   task. It is essential that code added to this hook function never attempts
+   to block in any way (for example, call xQueueReceive() with a block time
+   specified, or call vTaskDelay()). If the application makes use of the
+   vTaskDelete() API function (as this demo application does) then it is also
+   important that vApplicationIdleHook() is permitted to return to its calling
+   function, because it is the responsibility of the idle task to clean up
+   memory allocated by the kernel to any task that has since been deleted. */
+}
+/* USER CODE END 2 */
+
+/* USER CODE BEGIN 3 */
+void vApplicationTickHook( void )
+{
+   /* This function will be called by each tick interrupt if
+   configUSE_TICK_HOOK is set to 1 in FreeRTOSConfig.h. User code can be
+   added here, but the tick hook is called from an interrupt context, so
+   code must not attempt to block, and only the interrupt safe FreeRTOS API
+   functions can be used (those that end in FromISR()). */
+}
+/* USER CODE END 3 */
+
+/* USER CODE BEGIN 4 */
+void vApplicationStackOverflowHook(xTaskHandle xTask, signed char *pcTaskName)
+{
+   /* Run time stack overflow checking is performed if
+   configCHECK_FOR_STACK_OVERFLOW is defined to 1 or 2. This hook function is
+   called if a stack overflow is detected. */
+}
+/* USER CODE END 4 */
 
 /**
   * @brief  FreeRTOS initialization
@@ -224,6 +294,9 @@ void MX_FREERTOS_Init(void) {
   /* creation of SemTimer_RF69 */
   SemTimer_RF69Handle = osSemaphoreNew(1, 1, &SemTimer_RF69_attributes);
 
+  /* creation of SemReceiv_RF69 */
+  SemReceiv_RF69Handle = osSemaphoreNew(1, 1, &SemReceiv_RF69_attributes);
+
   /* USER CODE BEGIN RTOS_SEMAPHORES */
   /* add semaphores, ... */
   /* USER CODE END RTOS_SEMAPHORES */
@@ -231,6 +304,10 @@ void MX_FREERTOS_Init(void) {
   /* USER CODE BEGIN RTOS_TIMERS */
   /* start timers, add new ones, ... */
   /* USER CODE END RTOS_TIMERS */
+
+  /* Create the queue(s) */
+  /* creation of RF69_RxFlagQ */
+  RF69_RxFlagQHandle = osMessageQueueNew (2, sizeof(uint8_t), &RF69_RxFlagQ_attributes);
 
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */
@@ -254,6 +331,9 @@ void MX_FREERTOS_Init(void) {
 
   /* creation of TaskTIM_RF69 */
   TaskTIM_RF69Handle = osThreadNew(StartTaskTIM_RF69, NULL, &TaskTIM_RF69_attributes);
+
+  /* creation of TaskRF69_Recive */
+  TaskRF69_ReciveHandle = osThreadNew(StartTaskRF69_Recive, NULL, &TaskRF69_Recive_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -594,6 +674,24 @@ void StartTaskTIM_RF69(void *argument)
 //		osDelay(1);
 	}
   /* USER CODE END StartTaskTIM_RF69 */
+}
+
+/* USER CODE BEGIN Header_StartTaskRF69_Recive */
+/**
+* @brief Function implementing the TaskRF69_Recive thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_StartTaskRF69_Recive */
+void StartTaskRF69_Recive(void *argument)
+{
+  /* USER CODE BEGIN StartTaskRF69_Recive */
+  /* Infinite loop */
+  for(;;)
+  {
+    osDelay(1);
+  }
+  /* USER CODE END StartTaskRF69_Recive */
 }
 
 /* Private application code --------------------------------------------------*/

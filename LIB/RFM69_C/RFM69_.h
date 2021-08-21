@@ -170,6 +170,7 @@ typedef enum
 	RF69_ModeTx,				///< Transport is in the process of transmitting a message.
 	RF69_ModeRx,				///< Transport is in the process of receiving a message.
 //	RF69_ModeCad,				///< Transport is in the process of detecting channel activity (if supported)
+	RF69_ModeListen,
 } RF69_Mode;
 
 
@@ -277,12 +278,14 @@ void RF69_SetModeRx(void);
  **************************************************************************/
 void RF69_SetModeTx(void);
 
+#if _ENABLE_LISTEN_MODE == 1U
 /*******************************************************************************
 * @brief  
 * @param  None
 * @retval None
 *******************************************************************************/
-void RF69_SetModeListenRX();
+bool RF69_SetModeListenRX(void);
+#endif
 
 /***************************************************************************
  * @brief  
@@ -388,6 +391,14 @@ void RF69_ReadFIFO(void);
  * @retval None
  **************************************************************************/
 bool RF69_Recv(uint8_t* buf, uint8_t* len);
+
+/*******************************************************************************
+* @brief  
+* @param  None
+* @retval None
+*******************************************************************************/
+bool RF69_ReceivPacket(uint8_t* buf, uint16_t* len);
+
 
 /***************************************************************************
  * @brief  

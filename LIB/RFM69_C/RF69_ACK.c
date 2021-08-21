@@ -196,7 +196,12 @@ bool RecevFixACK(uint8_t *buf, uint8_t *len)
 {
 	//Ожидание приема
 	RF69_PacketMode(_PACKET_FIXED);
+
+#if _ENABLE_LISTEN_MODE == 1U
+		RF69_SetModeListenRX();
+#else
 	RF69_SetModeIdle();
+#endif
 
 	if(!RF69_WaitAvailableTimeout(500))
 	{
@@ -230,7 +235,11 @@ bool RecevFixACK(uint8_t *buf, uint8_t *len)
 bool RecevVarACK(uint8_t *buf, uint8_t *len)
 {
 	RF69_PacketMode(_PACKET_VARIABLE);
+#if _ENABLE_LISTEN_MODE == 1U
+		RF69_SetModeListenRX();
+#else
 	RF69_SetModeIdle();
+#endif
 	if(!RF69_WaitAvailableTimeout(500))
 	{
 		return false;
@@ -275,7 +284,12 @@ bool RecevVarACK(uint8_t *buf, uint8_t *len)
 bool RecevUnlimACK(uint8_t *buf, uint16_t *len)
 {
 	RF69_PacketMode(_PACKET_UNLIMIT);
+
+#if _ENABLE_LISTEN_MODE == 1U
+		RF69_SetModeListenRX();
+#else
 	RF69_SetModeIdle();
+#endif
 	if(!RF69_WaitAvailableTimeout(500))
 	{
 		return false;

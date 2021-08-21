@@ -446,7 +446,7 @@
 #define RF_LOWBAT_TRIM_2185       0x07
 
 
-// RegListen1
+// RegListen1 REG_LISTEN1_0D
 #define RF_LISTEN1_RESOL_64       0x50
 #define RF_LISTEN1_RESOL_4100     0xA0  // Default
 #define RF_LISTEN1_RESOL_262000   0xF0
