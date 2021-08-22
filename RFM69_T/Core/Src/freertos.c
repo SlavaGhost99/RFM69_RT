@@ -45,6 +45,7 @@
 
 /* Private typedef -----------------------------------------------------------*/
 typedef StaticTask_t osStaticThreadDef_t;
+typedef StaticQueue_t osStaticMessageQDef_t;
 typedef StaticSemaphore_t osStaticMutexDef_t;
 typedef StaticSemaphore_t osStaticSemaphoreDef_t;
 /* USER CODE BEGIN PTD */
@@ -126,46 +127,42 @@ const osThreadAttr_t InitTask_attributes = {
 };
 /* Definitions for RadioTask */
 osThreadId_t RadioTaskHandle;
-uint32_t RadioTaskBuffer[ 512 ];
-osStaticThreadDef_t RadioTaskControlBlock;
 const osThreadAttr_t RadioTask_attributes = {
   .name = "RadioTask",
-  .cb_mem = &RadioTaskControlBlock,
-  .cb_size = sizeof(RadioTaskControlBlock),
-  .stack_mem = &RadioTaskBuffer[0],
-  .stack_size = sizeof(RadioTaskBuffer),
-  .priority = (osPriority_t) osPriorityLow,
+  .stack_size = 512 * 4,
+  .priority = (osPriority_t) osPriorityNormal,
 };
 /* Definitions for TaskKey */
 osThreadId_t TaskKeyHandle;
 const osThreadAttr_t TaskKey_attributes = {
   .name = "TaskKey",
-  .stack_size = 128 * 4,
+  .stack_size = 256 * 4,
   .priority = (osPriority_t) osPriorityNormal,
-};
-/* Definitions for TaskDIO_RF69 */
-osThreadId_t TaskDIO_RF69Handle;
-uint32_t DIO_RF69Buffer[ 256 ];
-osStaticThreadDef_t DIO_RF69ControlBlock;
-const osThreadAttr_t TaskDIO_RF69_attributes = {
-  .name = "TaskDIO_RF69",
-  .cb_mem = &DIO_RF69ControlBlock,
-  .cb_size = sizeof(DIO_RF69ControlBlock),
-  .stack_mem = &DIO_RF69Buffer[0],
-  .stack_size = sizeof(DIO_RF69Buffer),
-  .priority = (osPriority_t) osPriorityRealtime,
 };
 /* Definitions for TaskTIM_RF69 */
 osThreadId_t TaskTIM_RF69Handle;
-uint32_t TaskTIM_RF69Buffer[ 256 ];
-osStaticThreadDef_t TaskTIM_RF69ControlBlock;
 const osThreadAttr_t TaskTIM_RF69_attributes = {
   .name = "TaskTIM_RF69",
-  .cb_mem = &TaskTIM_RF69ControlBlock,
-  .cb_size = sizeof(TaskTIM_RF69ControlBlock),
-  .stack_mem = &TaskTIM_RF69Buffer[0],
-  .stack_size = sizeof(TaskTIM_RF69Buffer),
+  .stack_size = 256 * 4,
   .priority = (osPriority_t) osPriorityHigh1,
+};
+/* Definitions for TaskDIO_RF69 */
+osThreadId_t TaskDIO_RF69Handle;
+const osThreadAttr_t TaskDIO_RF69_attributes = {
+  .name = "TaskDIO_RF69",
+  .stack_size = 256 * 4,
+  .priority = (osPriority_t) osPriorityHigh7,
+};
+/* Definitions for QueueBufRxValid */
+osMessageQueueId_t QueueBufRxValidHandle;
+uint8_t QueueBufRxValidBuffer[ 1 * sizeof( uint8_t ) ];
+osStaticMessageQDef_t QueueBufRxValidControlBlock;
+const osMessageQueueAttr_t QueueBufRxValid_attributes = {
+  .name = "QueueBufRxValid",
+  .cb_mem = &QueueBufRxValidControlBlock,
+  .cb_size = sizeof(QueueBufRxValidControlBlock),
+  .mq_mem = &QueueBufRxValidBuffer,
+  .mq_size = sizeof(QueueBufRxValidBuffer)
 };
 /* Definitions for RF_Mutex */
 osMutexId_t RF_MutexHandle;
@@ -208,10 +205,39 @@ void StartDefaultTask(void *argument);
 void StartInitTask(void *argument);
 void StartRadioTask(void *argument);
 void StartTaskKey(void *argument);
-void StartDIO_RF69(void *argument);
 void StartTaskTIM_RF69(void *argument);
+void StartTaskDIO_RF69(void *argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
+
+/* Hook prototypes */
+void vApplicationStackOverflowHook(xTaskHandle xTask, signed char *pcTaskName);
+void vApplicationMallocFailedHook(void);
+
+/* USER CODE BEGIN 4 */
+void vApplicationStackOverflowHook(xTaskHandle xTask, signed char *pcTaskName)
+{
+   /* Run time stack overflow checking is performed if
+   configCHECK_FOR_STACK_OVERFLOW is defined to 1 or 2. This hook function is
+   called if a stack overflow is detected. */
+}
+/* USER CODE END 4 */
+
+/* USER CODE BEGIN 5 */
+void vApplicationMallocFailedHook(void)
+{
+   /* vApplicationMallocFailedHook() will only be called if
+   configUSE_MALLOC_FAILED_HOOK is set to 1 in FreeRTOSConfig.h. It is a hook
+   function that will get called if a call to pvPortMalloc() fails.
+   pvPortMalloc() is called internally by the kernel whenever a task, queue,
+   timer or semaphore is created. It is also called by various parts of the
+   demo application. If heap_1.c or heap_2.c are used, then the size of the
+   heap available to pvPortMalloc() is defined by configTOTAL_HEAP_SIZE in
+   FreeRTOSConfig.h, and the xPortGetFreeHeapSize() API function can be used
+   to query the size of free heap space that remains (although it does not
+   provide information on how the remaining heap might be fragmented). */
+}
+/* USER CODE END 5 */
 
 /**
   * @brief  FreeRTOS initialization
@@ -248,6 +274,10 @@ void MX_FREERTOS_Init(void) {
   /* start timers, add new ones, ... */
   /* USER CODE END RTOS_TIMERS */
 
+  /* Create the queue(s) */
+  /* creation of QueueBufRxValid */
+  QueueBufRxValidHandle = osMessageQueueNew (1, sizeof(uint8_t), &QueueBufRxValid_attributes);
+
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */
   /* USER CODE END RTOS_QUEUES */
@@ -265,14 +295,26 @@ void MX_FREERTOS_Init(void) {
   /* creation of TaskKey */
   TaskKeyHandle = osThreadNew(StartTaskKey, NULL, &TaskKey_attributes);
 
-  /* creation of TaskDIO_RF69 */
-  TaskDIO_RF69Handle = osThreadNew(StartDIO_RF69, NULL, &TaskDIO_RF69_attributes);
-
   /* creation of TaskTIM_RF69 */
   TaskTIM_RF69Handle = osThreadNew(StartTaskTIM_RF69, NULL, &TaskTIM_RF69_attributes);
 
+  /* creation of TaskDIO_RF69 */
+  TaskDIO_RF69Handle = osThreadNew(StartTaskDIO_RF69, NULL, &TaskDIO_RF69_attributes);
+
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
+	if(!TaskKeyHandle)
+	{
+		TaskKeyHandle = osThreadNew(StartTaskKey, NULL, &TaskKey_attributes);
+	}
+	if(!TaskTIM_RF69Handle)
+	{
+		TaskTIM_RF69Handle = osThreadNew(StartTaskTIM_RF69, NULL, &TaskTIM_RF69_attributes);
+	}
+	if(!TaskDIO_RF69Handle)
+	{
+		TaskDIO_RF69Handle = osThreadNew(StartTaskDIO_RF69, NULL, &TaskDIO_RF69_attributes);
+	}
   /* USER CODE END RTOS_THREADS */
 
   /* USER CODE BEGIN RTOS_EVENTS */
@@ -492,17 +534,38 @@ void StartTaskKey(void *argument)
   /* USER CODE END StartTaskKey */
 }
 
-/* USER CODE BEGIN Header_StartDIO_RF69 */
+/* USER CODE BEGIN Header_StartTaskTIM_RF69 */
+/**
+* @brief Function implementing the TaskTIM_RF69 thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_StartTaskTIM_RF69 */
+void StartTaskTIM_RF69(void *argument)
+{
+  /* USER CODE BEGIN StartTaskTIM_RF69 */
+	/* Infinite loop */
+	for(;;)
+	{
+		xSemaphoreTake(SemTimer_RF69Handle, portMAX_DELAY );
+		RF69_CallbackWatchTimer();
+//		osDelay(1);
+	}
+  /* USER CODE END StartTaskTIM_RF69 */
+}
+
+/* USER CODE BEGIN Header_StartTaskDIO_RF69 */
 /**
 * @brief Function implementing the TaskDIO_RF69 thread.
 * @param argument: Not used
 * @retval None
 */
-/* USER CODE END Header_StartDIO_RF69 */
-void StartDIO_RF69(void *argument)
+/* USER CODE END Header_StartTaskDIO_RF69 */
+void StartTaskDIO_RF69(void *argument)
 {
-  /* USER CODE BEGIN StartDIO_RF69 */
-	/* Infinite loop */
+  /* USER CODE BEGIN StartTaskDIO_RF69 */
+  /* Infinite loop */
+
 	for(;;)
 	{
 		xSemaphoreTake(SemDIO_RF69Handle, portMAX_DELAY );
@@ -524,27 +587,7 @@ void StartDIO_RF69(void *argument)
 		}
 	//    osDelay(1);
 	}
-  /* USER CODE END StartDIO_RF69 */
-}
-
-/* USER CODE BEGIN Header_StartTaskTIM_RF69 */
-/**
-* @brief Function implementing the TaskTIM_RF69 thread.
-* @param argument: Not used
-* @retval None
-*/
-/* USER CODE END Header_StartTaskTIM_RF69 */
-void StartTaskTIM_RF69(void *argument)
-{
-	/* USER CODE BEGIN StartTaskTIM_RF69 */
-	/* Infinite loop */
-	for(;;)
-	{
-		xSemaphoreTake(SemDIO_RF69Handle, portMAX_DELAY );
-		RF69_CallbackWatchTimer();
-//		osDelay(1);
-	}
-	/* USER CODE END StartTaskTIM_RF69 */
+  /* USER CODE END StartTaskDIO_RF69 */
 }
 
 /* Private application code --------------------------------------------------*/
