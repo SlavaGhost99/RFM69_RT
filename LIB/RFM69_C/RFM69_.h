@@ -186,6 +186,8 @@ typedef enum
 
 volatile static uint8_t _thisAdress = 1;
 volatile static uint8_t _toAdress = 2;
+volatile static bool _rxBufValid			= false; //Флаг валидности буфера
+
 
 /******************************************************************************/
 //SPI Functions

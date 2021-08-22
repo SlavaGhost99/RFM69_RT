@@ -68,3 +68,7 @@ RTE_Components.h
 *.s
 *.inp
 *.iex
+RFM69_FreeRTOS.c
+RFM69_FreeRTOS.h
+/LIB/RFM69_C/RFM69_FreeRTOS.c
+/LIB/RFM69_C/RFM69_FreeRTOS.h

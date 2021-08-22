@@ -241,7 +241,8 @@ volatile static uint32_t rxGood				= 0;
 volatile static uint32_t rxBad				= 0;
 volatile static uint32_t txGood				= 0;
 
-volatile static bool _rxBufValid			= false;
+//volatile static bool _rxBufValid			= false; //Флаг валидности буфера
+
 volatile static bool _exitWaitAvailable		= false;
 
 volatile RF69_Mode _mode;
