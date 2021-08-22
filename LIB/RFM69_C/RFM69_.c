@@ -104,7 +104,7 @@ uint8_t _defaultSyncWord[] = {_SW_0, _SW_1, _SW_2, _SW_3, _SW_4, _SW_5, _SW_6, _
 //*** <<< end of configuration section >>>    ***
 #ifdef INC_FREERTOS_H
 //extern osStatus osThreadYield (void);
-#define YIELD		osThreadYield();
+#define YIELD		osDelay(1);
 
 #else
 #define YIELD HAL_Delay(1);
@@ -241,7 +241,8 @@ volatile static uint32_t rxGood				= 0;
 volatile static uint32_t rxBad				= 0;
 volatile static uint32_t txGood				= 0;
 
-volatile static bool _rxBufValid			= false;
+//volatile static bool _rxBufValid			= false; //Флаг валидности буфера
+
 volatile static bool _exitWaitAvailable		= false;
 
 volatile RF69_Mode _mode;
@@ -541,12 +542,12 @@ void RF69_SetOpMode(uint8_t mode)
 
 void RF69_SetModeIdle(void)
 {
-	DBG_TOGLE
-	DBG_TOGLE
-	DBG_TOGLE
+
     if (_mode != RF69_ModeIdle)
     {
-	DBG_TOGLE
+		_flag_Tx_Busy = false;
+		_flag_Rx_Busy = false;
+
 		if (_power >= 18)
 		{
 			// If high power boost, return power amp to receive mode
@@ -560,6 +561,14 @@ void RF69_SetModeIdle(void)
 
 void RF69_SetModeRx(void)
 {
+				DBG_TOGGLE;
+#if _ENABLE_LISTEN_MODE == 1U
+	if(_mode == RF69_ModeListen) //Выход, если включен Listen mode
+	{
+		return;
+	}
+#endif
+	
 	if (_mode != RF69_ModeRx)
 	{
 		if (_power >= 18)
@@ -578,7 +587,7 @@ void RF69_SetModeRx(void)
 
 void RF69_SetModeTx(void)
 {
-//	DBG_TOGLE
+//	DBG_TOGGLE
 	if (_mode != RF69_ModeTx)
 	{
 		if (_power >= 18)
@@ -607,9 +616,36 @@ void RF69_SetModeSleep()
 	}
 }
 
-void RF69_SetModeListenRX()
+#if _ENABLE_LISTEN_MODE == 1U
+bool RF69_SetModeListenRX()
 {
+				DBG_TOGGLE;DBG_TOGGLE;
+	static uint8_t cnt = 0;
+	
+	if(_mode == RF69_ModeListen)
+	{
+		return true;
+	}
+	cnt = 0;
+	while((_flag_Tx_Busy || _flag_Rx_Busy) && cnt < 200)
+	{
+		cnt++;
+		osDelay(1);
+	}
+	if(_flag_Tx_Busy || _flag_Rx_Busy)
+	{
+		return false;
+	}
+	RF69_SetModeRx();
+	RF69_WriteReg(REG_LISTEN1_0D, _LISTEN_REG1_);//Use RFM69_Config.h
+	RF69_WriteReg(REG_LISTEN2_0E, _LISTEN_IDLE_DURATION);
+	RF69_WriteReg(REG_LISTEN3_0F, _LISTEN_RX_DURATION);
+	
+	RF69_WriteReg(REG_OPMODE_01, RF_OPMODE_LISTEN_ON);
+	
+	_mode = RF69_ModeListen;
 }
+#endif
 
 void RF69_SetTxPower(int8_t power, uint8_t _IsHighPowerModule)
 {
@@ -1044,7 +1080,7 @@ bool RF69_Send(const uint8_t* data, uint8_t len)
 
 void RF69_Send_DIO0(void)
 {
-	DBG_TOGLE; DBG_TOGLE; DBG_TOGLE; DBG_TOGLE;
+	DBG_TOGGLE; DBG_TOGGLE; DBG_TOGGLE; DBG_TOGGLE;
 	
 	
 	
@@ -1132,44 +1168,24 @@ void RF69_Interrupt_DIO0(void)
 	_flagIRQ_DIO0 = true;
 	if(_PacketMode == _PACKET_FIXED)
 	{
-/*		if(_mode == RF69_ModeRx)
-		{
-			_lastRssi = -((int8_t)(RF69_ReadReg(REG_RSSIVALUE_24) >> 1));
-			RF69_ReadMultipleReg(REG_FIFO_00, (uint8_t*)&_packetFix, RF69_MAX_FIFO_LENGHT);
-			if(
-//						_packet._header._HeaderTo != _thisAdress 
-						0
-						|| _packetFix._header._HeaderLenght <= RF69_HEADER_LENGHT
-						|| _packetFix._header._HeaderLenght > RF69_MAX_FIFO_LENGHT)
-			{
-				_rxBufValid = false; // RF69_ReadFIFO
-				rxBad++;
-				return;
-			}
-			rxGood++;
-			_rxBufValid = true; // RF69_ReadFIFO
-			RF69_SetModeIdle();// Clears FIFO
 
-		}
-*/
 		if(_mode == RF69_ModeTx)
 		{
-			DBG_TOGLE;
+//				DBG_TOGGLE;
 			volatile static uint8_t irqflags2 = 0;
 //			Delay_uS(1);
 			uint8_t cnt = 0;
 			irqflags2 = RF69_ReadReg(REG_IRQFLAGS2_28);
 			while(!(irqflags2 & RF_IRQFLAGS2_PACKETSENT) && cnt <200)
 			{
-			DBG_TOGLE;
+//				DBG_TOGGLE;
 				cnt++;
 				irqflags2 = RF69_ReadReg(REG_IRQFLAGS2_28);
 				
 			}
 			if (/*_mode == RF69_ModeTx &&*/ (irqflags2 & RF_IRQFLAGS2_PACKETSENT))
 			{
-			DBG_TOGLE;
-			DBG_TOGLE;
+//				DBG_TOGGLE;DBG_TOGGLE;
 				
 			// A transmitter message has been fully sent
 				RF69_SetModeIdle();// Clears FIFO
@@ -1179,25 +1195,20 @@ void RF69_Interrupt_DIO0(void)
 		
 	}
 
-//	if(_mode == RF69_ModeRx
-//		&& (_PacketMode == _PACKET_VARIABLE || _PacketMode == _PACKET_UNLIMIT)
-///*		  && _flag_Rx_Busy*/
-//		)
-//	{
-//		RF69_ReadFIFO_DIO0();
-//	}
-//	if(_mode == RF69_ModeTx
-//		&&  (_PacketMode == _PACKET_VARIABLE || _PacketMode == _PACKET_UNLIMIT)
-//		)
-//	{
-//		RF69_Send_DIO0();
-//	}
+
 #if _ENABLE_VAR_PACKET == 1U
-	if(_mode == RF69_ModeRx
+	if( (_mode == RF69_ModeRx
+#if _ENABLE_LISTEN_MODE == 1U
+		|| _mode == RF69_ModeListen
+#endif
+		)
 		&& (_PacketMode == _PACKET_VARIABLE)
 /*		&& _flag_Rx_Busy*/
 		)
 	{
+#if _ENABLE_LISTEN_MODE == 1U
+		_mode = RF69_ModeRx;
+#endif
 		RF69_ReadFIFO_DIO0();
 	}
 	if(_mode == RF69_ModeTx
@@ -1208,47 +1219,42 @@ void RF69_Interrupt_DIO0(void)
 	}
 
 #endif
-#if _ENABLE_UNLIMIT_PACKET == 1U
-//	if(_mode == RF69_ModeRx
-//		&& (_PacketMode == _PACKET_UNLIMIT)
-///*		  && _flag_Rx_Busy*/
-//		)
-//	{
-//		RF69_ReadFIFO_DIO0();
-//	}
-//	if(_mode == RF69_ModeTx
-//		&&  (_PacketMode == _PACKET_UNLIMIT)
-//		)
-//	{
-//		RF69_Send_DIO0();
-//	}
 
-#endif
 }
-
-//void RF69_Interrupt_DIO1(void)
-//{
-//		_flagIRQ_DIO1 = true;
-//}
 
 void RF69_Interrupt_DIO1_Rising(void)
 {
 	_flagIRQ_DIO1 = true;
 	
 #if _ENABLE_VAR_PACKET == 1U
-	if(_mode == RF69_ModeRx
+	if((_mode == RF69_ModeRx
+#if _ENABLE_LISTEN_MODE == 1U
+	
+		|| _mode == RF69_ModeListen
+#endif	
+		)
 		&&  (_PacketMode == _PACKET_VARIABLE)
 		)
 	{
+#if _ENABLE_LISTEN_MODE == 1U
+		_mode = RF69_ModeRx;
+#endif	
 		RF69_ReadFIFO_DIO1();
 	}
 #endif
 
 #if _ENABLE_UNLIMIT_PACKET == 1U
-	if(_mode == RF69_ModeRx
+	if((_mode == RF69_ModeRx
+#if _ENABLE_LISTEN_MODE == 1U
+		|| _mode == RF69_ModeListen
+#endif	
+		)
 		&&  (_PacketMode == _PACKET_UNLIMIT)
 		)
 	{
+#if _ENABLE_LISTEN_MODE == 1U
+		_mode = RF69_ModeRx;
+#endif	
 		RF69_ReadFIFO_DIO1();
 	}
 
@@ -1259,7 +1265,6 @@ void RF69_Interrupt_DIO1_Falling(void)
 {
 	_flagIRQ_DIO1 = true;
 	
-//	_flagIRQ_DIO1_Fall = true;
 	if(_mode == RF69_ModeTx
 		&& _PacketMode
 		&& _flag_Tx_Busy)
@@ -1273,7 +1278,14 @@ bool RF69_Available(void)
 	{
 		return false;
 	}
-	RF69_SetModeRx();
+	if(_mode != RF69_ModeRx
+#if _ENABLE_LISTEN_MODE == 1U
+		&& _mode != RF69_ModeListen
+#endif	
+	)
+	{
+		RF69_SetModeRx();
+	}
 	return _rxBufValid;
 }
 
@@ -1295,7 +1307,7 @@ bool RF69_WaitAvailable(void)
 			_exitWaitAvailable = false;
 			return false;
 		}
-		vTaskDelay(1);
+		osDelay(1);
 //		YIELD;
     }
 	return true;
@@ -1303,6 +1315,12 @@ bool RF69_WaitAvailable(void)
 
 void RF69_ReadFIFO_DIO1()
 {
+#if _ENABLE_LISTEN_MODE == 1U
+	if(_mode == RF69_ModeListen)
+	{
+		_mode =RF69_ModeRx;
+	}
+#endif
 	if(!_PacketMode 
 		|| (_mode != RF69_ModeRx)
 		|| _rxBufValid
@@ -1418,9 +1436,9 @@ void RF69_ReadFIFO_DIO0()
 		return;
 	}
 #if _ENABLE_VAR_PACKET == 1U
-	if(_PacketMode == _PACKET_VARIABLE)
+	if(_PacketMode == _PACKET_VARIABLE) //Если Var packet
 	{
-		if(!_flag_Rx_Busy && _mode == RF69_ModeRx)
+		if(!_flag_Rx_Busy && _mode == RF69_ModeRx) //Проверка на окончание приема
 		{
 			RF69_ReadMultipleReg(REG_FIFO_00, (uint8_t*)&_packetVar, RF69_ReadReg(REG_FIFOTHRESH_3C));
 			
@@ -1436,44 +1454,7 @@ void RF69_ReadFIFO_DIO0()
 		_timer_c_StopTimer();
 	}
 #endif
-	
-#if _ENABLE_UNLIMIT_PACKET ==1U
-/*
-	if(_PacketMode == _PACKET_UNLIMIT)
-	{
-		if(!_flag_Rx_Busy && _mode == RF69_ModeRx)
-		{
-			//Прием заголовка
-			RF69_ReadMultipleReg(REG_FIFO_00, 
-					(uint8_t*)&_unlimPacketSend, RF69_ReadReg(REG_FIFOTHRESH_3C));
-			//Если длинна данных меньше RF_FIFOTHRESH_MA
-			if(_unlimPacketSend._header._lenghtData < RF_FIFOTHRESH_MAX)
-			{
-				//Записываем REG_FIFOTHRESH_3C длинну данных
-				RF69_WriteReg(REG_FIFOTHRESH_3C, _unlimPacketSend._header._lenghtData);
-			}
-			else
-			{
-				//Иначе RF_FIFOTHRESH_MAX
-				RF69_WriteReg(REG_FIFOTHRESH_3C, RF_FIFOTHRESH_MAX);
-			}
-			
-		}
-		if(_sizeFIFO_data > _count_FIFO)
-		{
-//			volatile static uint8_t cn = 0;
-			size = _sizeFIFO_data - _count_FIFO;
-			RF69_ReadMultipleReg(REG_FIFO_00,
-				(uint8_t*)&_unlimPacketSend._data[_count_FIFO], 
-				size);	
-		}
-//		else
-//		{
-//		}
-	}
-*/
-#endif
-//	HAL_TIM_Base_Stop_IT(&_TIMER_WATCH_HANDLE);
+
 
 	_flag_Rx_Busy = false;
 	_rxBufValid = true; //RF69_ReadFIFO_DIO0
@@ -1492,7 +1473,7 @@ bool RF69_RecvVariablePacket(uint8_t* buf, uint8_t* len)
 	{
 		return false;
 	}
-	memcpy(buf, &_packetVar._data, _packetVar._header._HeaderLenght);
+	memcpy(buf, (uint8_t*)&_packetVar._data, _packetVar._header._HeaderLenght);
 	*len = _packetVar._header._HeaderLenght;
 	_rxBufValid = false; //RF69_RecvVariablePacket
 	return true;
@@ -1513,7 +1494,7 @@ bool RF69_RecvUnlimitPacket(uint8_t* buf, uint16_t* len)
 	{
 		return false;
 	}
-	memcpy(buf, &_unlimPacketSend._data, _unlimPacketSend._header._lenghtData);
+	memcpy(buf, (uint8_t*)&_unlimPacketSend._data, _unlimPacketSend._header._lenghtData);
 	*len = _unlimPacketSend._header._lenghtData;
 	_rxBufValid = false; // RF69_RecvUnlimitPacket
 	
@@ -1525,9 +1506,11 @@ bool RF69_RecvUnlimitPacket(uint8_t* buf, uint16_t* len)
 
 bool RF69_WaitAvailableTimeout(uint16_t timeout)
 {
-	unsigned long starttime = HAL_GetTick();
-	while ((HAL_GetTick() - starttime) < timeout)
+	static uint16_t cnt = 0;
+	cnt = 0;
+	while (cnt < timeout)
 	{
+		cnt++;
 		if(_flagIRQ_DIO0)
 		{
 			RF69_InterruptHandler();
@@ -1587,6 +1570,39 @@ void RF69_InterruptHandler(void)
 	}
 	
 
+}
+
+bool RF69_ReceivPacket(uint8_t* buf, uint16_t* len)
+{
+	static bool ret_receiv = false;
+	switch ((uint8_t)_PacketMode)
+	{
+#if _ENABLE_VAR_PACKET == 1U
+		case _PACKET_VARIABLE:
+		{
+			ret_receiv = RF69_RecvVariablePacket(buf, (uint8_t*)len);
+			break;
+		}
+#endif
+#if _ENABLE_UNLIMIT_PACKET
+		case _PACKET_UNLIMIT:
+		{
+			ret_receiv = RF69_RecvUnlimitPacket(buf, len);
+			break;
+		}
+#endif
+		case _PACKET_FIXED:
+		{
+			ret_receiv = RF69_Recv(buf, (uint8_t*)len);
+			break;
+		}
+		default:
+		{
+			_rxBufValid = false;
+			return false;
+		}
+		return ret_receiv;
+	}
 }
 
 bool RF69_Recv(uint8_t* buf, uint8_t* len)

@@ -540,7 +540,7 @@ void StartTaskTIM_RF69(void *argument)
 	/* Infinite loop */
 	for(;;)
 	{
-		xSemaphoreTake(SemDIO_RF69Handle, portMAX_DELAY );
+		xSemaphoreTake(SemTimer_RF69Handle, portMAX_DELAY );
 		RF69_CallbackWatchTimer();
 //		osDelay(1);
 	}
@@ -595,10 +595,10 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 
 void TIM_IRQHandler(TIM_HandleTypeDef *htim)
 {
-	static portBASE_TYPE xHigherPriorityTaskWoken;
-	xHigherPriorityTaskWoken = pdFALSE;
-	xSemaphoreGiveFromISR(SemTimer_RF69Handle, &xHigherPriorityTaskWoken );
-	portEND_SWITCHING_ISR(xHigherPriorityTaskWoken);
+//	static portBASE_TYPE xHigherPriorityTaskWoken;
+//	xHigherPriorityTaskWoken = pdFALSE;
+//	xSemaphoreGiveFromISR(SemTimer_RF69Handle, &xHigherPriorityTaskWoken );
+//	portEND_SWITCHING_ISR(xHigherPriorityTaskWoken);
 	UNUSED(htim);
 }
 void PrintText(uint8_t* pBuf, uint8_t lenght)
