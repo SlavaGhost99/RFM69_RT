@@ -27,6 +27,8 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include <stdlib.h>
+#include "stdio.h"
 #include <string.h>
 #include <queue.h>
 #include <semphr.h>
@@ -40,7 +42,8 @@
 #include "AES_GEN.h"
 #include "AES_KEY.h"
 #include "TIMER_C.h"
-#include "ssd1306.h"
+//#include "OLED.h"
+//#include "ssd1306.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -102,6 +105,9 @@ extern DMA_HandleTypeDef _SPI_DMA_RX_HANDLE;
 extern DMA_HandleTypeDef _SPI_DMA_TX_HANDLE;
 extern TIM_HandleTypeDef _TIMER_WATCH_HANDLE;
 extern DMA_HandleTypeDef hdma_spi2_rx;
+
+//extern I2C_HandleTypeDef hi2c1;
+//extern char* sprintf(char*, const char*,
 #endif
 
 /* USER CODE END Variables */
@@ -134,7 +140,7 @@ const osThreadAttr_t RadioTask_attributes = {
   .cb_size = sizeof(RadioTaskControlBlock),
   .stack_mem = &RadioTaskBuffer[0],
   .stack_size = sizeof(RadioTaskBuffer),
-  .priority = (osPriority_t) osPriorityLow,
+  .priority = (osPriority_t) osPriorityNormal1,
 };
 /* Definitions for TaskKey */
 osThreadId_t TaskKeyHandle;
@@ -166,6 +172,18 @@ const osThreadAttr_t TaskTIM_RF69_attributes = {
   .stack_mem = &TaskTIM_RF69Buffer[0],
   .stack_size = sizeof(TaskTIM_RF69Buffer),
   .priority = (osPriority_t) osPriorityHigh1,
+};
+/* Definitions for TaskOLED */
+osThreadId_t TaskOLEDHandle;
+uint32_t myTaskOLEDBuffer[ 512 ];
+osStaticThreadDef_t myTaskOLEDControlBlock;
+const osThreadAttr_t TaskOLED_attributes = {
+  .name = "TaskOLED",
+  .cb_mem = &myTaskOLEDControlBlock,
+  .cb_size = sizeof(myTaskOLEDControlBlock),
+  .stack_mem = &myTaskOLEDBuffer[0],
+  .stack_size = sizeof(myTaskOLEDBuffer),
+  .priority = (osPriority_t) osPriorityNormal,
 };
 /* Definitions for RF_Mutex */
 osMutexId_t RF_MutexHandle;
@@ -210,6 +228,7 @@ void StartRadioTask(void *argument);
 void StartTaskKey(void *argument);
 void StartDIO_RF69(void *argument);
 void StartTaskTIM_RF69(void *argument);
+void StartTaskOLED(void *argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
@@ -271,6 +290,9 @@ void MX_FREERTOS_Init(void) {
   /* creation of TaskTIM_RF69 */
   TaskTIM_RF69Handle = osThreadNew(StartTaskTIM_RF69, NULL, &TaskTIM_RF69_attributes);
 
+  /* creation of TaskOLED */
+  TaskOLEDHandle = osThreadNew(StartTaskOLED, NULL, &TaskOLED_attributes);
+
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
   /* USER CODE END RTOS_THREADS */
@@ -314,7 +336,8 @@ void StartInitTask(void *argument)
 	RF69_Init();
 	InitRND();
 	
-	
+//	ssd1306_Init();
+//	ssd1306_Fill(Black);
 	
 	osMutexRelease(RF_MutexHandle);
 	AES_CTR_Set_Key(AK_Key128, CRL_AES128_KEY);
@@ -337,7 +360,7 @@ void StartRadioTask(void *argument)
 	volatile static bool _flag= 0;
 	for(;;)
 	{
-		osMutexWait(RF_MutexHandle, osWaitForever);
+//		osMutexWait(RF_MutexHandle, osWaitForever);
 #if _APP_MODE == 1U //Fixed Packet
 		RF69_PacketMode(_PACKET_FIXED);
 		_flag = RF69_Send ((uint8_t*)_LMessage, 28);
@@ -427,6 +450,7 @@ void StartRadioTask(void *argument)
 #endif
 #if _APP_MODE == 6U //Unlim Packet with ACK
 		_all++;
+		RF69_SetModeIdle();
 		_flag = SendUnlimACK((uint8_t*) _UMessage, 500);
 		if(_flag)
 		{
@@ -440,7 +464,7 @@ void StartRadioTask(void *argument)
 		}
 #endif
 /******************************************************************************/
-		osMutexRelease(RF_MutexHandle);
+//		osMutexRelease(RF_MutexHandle);
 
 //		_timer_c_StartTimer(10000);
 		 vTaskDelay(20);
@@ -454,6 +478,18 @@ void StartRadioTask(void *argument)
 		LED_GREEN_OFF;
 		LED_RED_OFF;
 		LED_YELL_OFF;
+		
+//		uint8_t str[48];
+
+//		sprintf((char*)&str, "ok_Packet_send %i",  ok_Packet_send);
+//		ssd1306_SetCursor(0, 0);
+//		ssd1306_WriteString((char*)&str, Font_11x18, White);
+//		ssd1306_UpdateScreen();
+//		sprintf((char*)&str, "err_Timer %i", err_Timer);
+//		ssd1306_SetCursor(0, 16);
+//		ssd1306_WriteString((char*)&str, Font_11x18, White);
+//		ssd1306_UpdateScreen();
+
 		vTaskDelay(300);
 		
 		
@@ -478,11 +514,11 @@ void StartTaskKey(void *argument)
 	  xSemaphoreTake(SemaphoreKEYHandle, portMAX_DELAY );
 	  if(HAL_GPIO_ReadPin(KEY_GPIO_Port, KEY_Pin) == GPIO_PIN_SET)
 	  {
-		  DBG_ON;
+//		  DBG_ON;
 	  }
 	  else
 	  {
-		  DBG_OFF;
+//		  DBG_OFF;
 	  }
 	  LED1_ON;
 	  osDelay(20);
@@ -536,15 +572,43 @@ void StartDIO_RF69(void *argument)
 /* USER CODE END Header_StartTaskTIM_RF69 */
 void StartTaskTIM_RF69(void *argument)
 {
-	/* USER CODE BEGIN StartTaskTIM_RF69 */
+  /* USER CODE BEGIN StartTaskTIM_RF69 */
 	/* Infinite loop */
 	for(;;)
 	{
-		xSemaphoreTake(SemDIO_RF69Handle, portMAX_DELAY );
-		RF69_CallbackWatchTimer();
+		xSemaphoreTake(SemTimer_RF69Handle, portMAX_DELAY );
+//		RF69_CallbackWatchTimer();
 //		osDelay(1);
 	}
-	/* USER CODE END StartTaskTIM_RF69 */
+  /* USER CODE END StartTaskTIM_RF69 */
+}
+
+/* USER CODE BEGIN Header_StartTaskOLED */
+/**
+* @brief Function implementing the TaskOLED thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_StartTaskOLED */
+void StartTaskOLED(void *argument)
+{
+  /* USER CODE BEGIN StartTaskOLED */
+	/* Infinite loop */
+	for(;;)
+	{
+//#include "list.h"
+//		uint8_t str[48];
+//		FontSet(Segoe_UI_Eng_10);
+
+//		sprintf((char*)&str, "ok_Packet_send %i", ok_Packet_send);
+//		OLED_DrawStr((char*)&str,0,0,1);
+//		sprintf((char*)&str, "err_Timer %i", ok_Packet_send);
+//		OLED_DrawStr((char*)&str,0,14,1);
+//		OLED_UpdateScreen();
+
+		osDelay(100);
+	}
+  /* USER CODE END StartTaskOLED */
 }
 
 /* Private application code --------------------------------------------------*/
@@ -595,10 +659,11 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 
 void TIM_IRQHandler(TIM_HandleTypeDef *htim)
 {
-	static portBASE_TYPE xHigherPriorityTaskWoken;
-	xHigherPriorityTaskWoken = pdFALSE;
-	xSemaphoreGiveFromISR(SemTimer_RF69Handle, &xHigherPriorityTaskWoken );
-	portEND_SWITCHING_ISR(xHigherPriorityTaskWoken);
+//	static portBASE_TYPE xHigherPriorityTaskWoken;
+//	xHigherPriorityTaskWoken = pdFALSE;
+//	xSemaphoreGiveFromISR(SemTimer_RF69Handle, &xHigherPriorityTaskWoken );
+//	portEND_SWITCHING_ISR(xHigherPriorityTaskWoken);
+	DBG_TOGGLE DBG_TOGGLE
 	UNUSED(htim);
 }
 void PrintText(uint8_t* pBuf, uint8_t lenght)
@@ -606,4 +671,3 @@ void PrintText(uint8_t* pBuf, uint8_t lenght)
 }
 /* USER CODE END Application */
 
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

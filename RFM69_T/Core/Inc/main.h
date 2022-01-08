@@ -128,7 +128,7 @@ void Error_Handler(void);
 #ifdef DBG_Pin
 #define DBG_OFF			HAL_GPIO_WritePin(DBG_GPIO_Port,DBG_Pin , GPIO_PIN_RESET)
 #define DBG_ON			HAL_GPIO_WritePin(DBG_GPIO_Port,DBG_Pin , GPIO_PIN_SET)
-#define DBG_TOGLE		DBG_ON; DBG_OFF;
+#define DBG_TOGGLE		DBG_ON; DBG_OFF;
 #endif
 /* USER CODE END Private defines */
 
@@ -137,5 +137,3 @@ void Error_Handler(void);
 #endif
 
 #endif /* __MAIN_H */
-
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

@@ -527,11 +527,11 @@ void StartTaskKey(void *argument)
 		xSemaphoreTake(SemaphoreKEYHandle, portMAX_DELAY );
 		if(HAL_GPIO_ReadPin(KEY_GPIO_Port, KEY_Pin) == GPIO_PIN_SET)
 		{
-		  DBG_ON;
+//		  DBG_ON;
 		}
 		else
 		{
-		  DBG_OFF;
+//		  DBG_OFF;
 		}
 		LED1_ON;
 		osDelay(20);
@@ -589,8 +589,8 @@ void StartTaskTIM_RF69(void *argument)
 	/* Infinite loop */
 	for(;;)
 	{
-		xSemaphoreTake(SemDIO_RF69Handle, portMAX_DELAY );
-		RF69_CallbackWatchTimer();
+		xSemaphoreTake(SemTimer_RF69Handle, portMAX_DELAY );
+//		RF69_CallbackWatchTimer();
 //		osDelay(1);
 	}
   /* USER CODE END StartTaskTIM_RF69 */
@@ -643,14 +643,13 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 }
 void TIM_IRQHandler(TIM_HandleTypeDef *htim)
 {
-	static portBASE_TYPE xHigherPriorityTaskWoken;
-	xHigherPriorityTaskWoken = pdFALSE;
-	xSemaphoreGiveFromISR(SemTimer_RF69Handle, &xHigherPriorityTaskWoken );
-	portEND_SWITCHING_ISR(xHigherPriorityTaskWoken);
+//	static portBASE_TYPE xHigherPriorityTaskWoken;
+//	xHigherPriorityTaskWoken = pdFALSE;
+//	xSemaphoreGiveFromISR(SemTimer_RF69Handle, &xHigherPriorityTaskWoken );
+//	portEND_SWITCHING_ISR(xHigherPriorityTaskWoken);
 	UNUSED(htim);
 }
 
 
 /* USER CODE END Application */
 
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

@@ -1,5 +1,30 @@
 
-#include"ssd1306.h"
+// Header: "ssd1306.h"
+// File Name: 
+// Author: 
+// Date: 
+
+/******************************************************************************/
+//Start File
+
+
+/******************************************************************************/
+//Include
+
+/******************************************************************************/
+//Var
+
+/******************************************************************************/
+//Function
+
+
+
+
+
+/******************************************************************************/
+//End File
+
+#include "ssd1306.h"
 
 
 // Databuffer voor het scherm
@@ -8,14 +33,14 @@ static uint8_t SSD1306_Buffer[SSD1306_WIDTH * SSD1306_HEIGHT / 8];
 // Een scherm-object om lokaal in te werken
 static SSD1306_t SSD1306;
 
-
+extern void vTaskDelay(uint32_t);
 //
 //	Een byte sturen naar het commando register
 //	Kan niet gebruikt worden buiten deze file
 //
 static void ssd1306_WriteCommand(uint8_t command)
 {
-	HAL_I2C_Mem_Write(&hi2c1,SSD1306_I2C_ADDR,0x00,1,&command,1,10);
+	HAL_I2C_Mem_Write(&SSD1306_I2C_PORT,SSD1306_I2C_ADDR,0x00,1,&command,1,10);
 }
 
 
@@ -100,15 +125,19 @@ void ssd1306_UpdateScreen(void)
 		ssd1306_WriteCommand(0xB0 + i);
 		ssd1306_WriteCommand(0x00);
 		ssd1306_WriteCommand(0x10);
-
-
-		HAL_StatusTypeDef ret=HAL_I2C_Mem_Write(&hi2c1,SSD1306_I2C_ADDR,0x40,1,&SSD1306_Buffer[SSD1306_WIDTH * i],SSD1306_WIDTH,100);
+		uint8_t count = 100;
+		while (SSD1306_I2C_PORT.State != HAL_I2C_STATE_READY & count != 0)
+		{
+			vTaskDelay(1);
+			count --;
+		}
+		HAL_StatusTypeDef ret=HAL_I2C_Mem_Write_DMA(&SSD1306_I2C_PORT,SSD1306_I2C_ADDR,0x40,1,&SSD1306_Buffer[SSD1306_WIDTH * i],SSD1306_WIDTH);
 		if(ret !=HAL_OK)
 		{
 		    /* winxos 2018-01-24*/
             /*deal with error*/
-			HAL_I2C_DeInit(&hi2c1);
-			HAL_I2C_Init(&hi2c1);
+			HAL_I2C_DeInit(&SSD1306_I2C_PORT);
+			HAL_I2C_Init(&SSD1306_I2C_PORT);
 		}
 	}
 }

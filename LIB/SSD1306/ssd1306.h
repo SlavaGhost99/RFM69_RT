@@ -1,6 +1,13 @@
+/******************************************************************************/
+//Start File "ssd1306.h"
+// Header: 
+// File Name: 
+// Author: 
+// Date: 
+/******************************************************************************/
 
-#include "stm32f4xx_hal.h"
-#include "fonts.h"
+
+//End File
 
 //	Deze library is door Olivier Van den Eede 2016 geschreven en aangepast voor gebruik met
 //	Stm32 microcontrollers en maakt gebruik van de HAL-i2c library's.
@@ -22,10 +29,13 @@
 //<3=>I2C3
 #define _I2C_INTERFACE 1U
 
+#include "stm32f4xx_hal.h"
+#include "fonts.h"
+
 //*** <<< end of configuration section >>>    ***
 
-#ifndef ssd1306
-#define ssd1306
+#ifndef __SSD13006_FILE__
+#define __SSD13006_FILE__
 
 // i2c port naam in main programma gegenereerd door cube
 // I2C address 
@@ -70,14 +80,59 @@ extern I2C_HandleTypeDef SSD1306_I2C_PORT;
 //
 //	De functies definities van de functies die gebruikt kunnen worden
 //
+/*******************************************************************************
+* @brief  
+* @param  None
+* @retval None
+*******************************************************************************/
 uint8_t ssd1306_Init(void);
+
+/*******************************************************************************
+* @brief  
+* @param  None
+* @retval None
+*******************************************************************************/
 void ssd1306_Fill(SSD1306_COLOR color);
+
+/*******************************************************************************
+* @brief  
+* @param  None
+* @retval None
+*******************************************************************************/
 void ssd1306_UpdateScreen(void);
+
+/*******************************************************************************
+* @brief  
+* @param  None
+* @retval None
+*******************************************************************************/
 void ssd1306_DrawPixel(uint8_t x, uint8_t y, SSD1306_COLOR color);
+
+/*******************************************************************************
+* @brief  
+* @param  None
+* @retval None
+*******************************************************************************/
 char ssd1306_WriteChar(char ch, FontDef Font, SSD1306_COLOR color);
+/*******************************************************************************
+* @brief  
+* @param  None
+* @retval None
+*******************************************************************************/
 char ssd1306_WriteString(char* str, FontDef Font, SSD1306_COLOR color);
+
+/*******************************************************************************
+* @brief  
+* @param  None
+* @retval None
+*******************************************************************************/
 void ssd1306_SetCursor(uint8_t x, uint8_t y);
 
+/*******************************************************************************
+* @brief  
+* @param  None
+* @retval None
+*******************************************************************************/
 static void ssd1306_WriteCommand(uint8_t command);
 
-#endif
+#endif //__SSD13006_FILE__

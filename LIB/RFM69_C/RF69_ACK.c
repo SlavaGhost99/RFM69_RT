@@ -121,14 +121,22 @@ bool SendFixACK(const uint8_t *buf, uint8_t len)
 	memcpy(_fix_pack._packet, buf, len);
 	if(!RF69_Send((uint8_t*)&_fix_pack, len + sizeof(_HEADER_ACK_PACK)))
 	{
+		bad_Packet_send++;
 		return false;
 	}
 //	RF69_WaitPacketSent();
-	if(!ReceiveACK(&_fix_pack._header, (uint8_t*)buf))
+	RF69_TimerStart(100); // Запуск таймера
+	uint8_t ret = ReceiveACK(&_fix_pack._header, (uint8_t*)buf);
+	RF69_TimerStop(); // Останов таймера
+	if (ret)
 	{
-		return false;
+		ok_Packet_send ++;
 	}
-	return true;
+	else
+	{
+		err_ACK_receiv ++;
+	}
+	return ret;
 }
 
 #if _ENABLE_VAR_PACKET == 1U
@@ -149,6 +157,7 @@ bool SendVarACK(const uint8_t *buf, uint8_t len)
 	{
 		if(cnt > _MAX_WAIT_SEND)
 		{
+			bad_Packet_send++;
 			RF69_SetModeIdle();
 			return false;
 		}
@@ -157,7 +166,18 @@ bool SendVarACK(const uint8_t *buf, uint8_t len)
 	}
 	vTaskDelay(5);
 //	return 0;
-	return ReceiveACK ((_HEADER_ACK_PACK*)&_var_pack._header, (uint8_t*)buf);
+	RF69_TimerStart(100); // Запуск таймера
+	uint8_t ret  = ReceiveACK ((_HEADER_ACK_PACK*)&_var_pack._header, (uint8_t*)buf);
+	RF69_TimerStop(); // Останов таймера
+	if (ret)
+	{
+		ok_Packet_send ++;
+	}
+	else
+	{
+		err_ACK_receiv ++;
+	}	
+	return ret;
 	
 }
 #endif
@@ -181,6 +201,7 @@ bool SendUnlimACK(const uint8_t *buf, uint16_t len)
 	{
 		if(cnt > _MAX_WAIT_SEND)
 		{
+			bad_Packet_send++;
 			RF69_SetModeIdle();
 			return false;
 		}
@@ -189,7 +210,19 @@ bool SendUnlimACK(const uint8_t *buf, uint16_t len)
 	}
 //	vTaskDelay(5);
 //	return 0;
-	return ReceiveACK ((_HEADER_ACK_PACK*)&_unlim_pack._header, (uint8_t*)buf);
+
+	RF69_TimerStart(100); // Запуск таймера
+	bool ret = ReceiveACK ((_HEADER_ACK_PACK*)&_unlim_pack._header, (uint8_t*)buf);
+	RF69_TimerStop(); // Останов таймера
+	if (ret)
+	{
+		ok_Packet_send ++;
+	}
+	else
+	{
+		err_ACK_receiv ++;
+	}	
+	return ret;
 }
 #endif
 bool RecevFixACK(uint8_t *buf, uint8_t *len)
@@ -331,19 +364,23 @@ bool ReceiveACK(_HEADER_ACK_PACK *header, uint8_t *buf)
 	MakeACK(header, buf, (_ACK*)&_ackSnd);
 	if(!RF69_WaitAvailableTimeout(100))
 	{
+//		RF69_TimerStop();
 		return false;
 	}
 	volatile static uint8_t ln;
 	ln = sizeof(_ACK);
 	if(!RF69_Recv((uint8_t*)&_ackRec, (uint8_t*)&ln))
 	{
+//		RF69_TimerStop();
 		return false;
 	}
 	if(ln != sizeof(_ACK))
 	{
+//		RF69_TimerStop();
 		return false;
 	}
 	
+//	RF69_TimerStop();
 	return CompareACK((_ACK*)&_ackSnd, (_ACK*)&_ackRec);
 }
 

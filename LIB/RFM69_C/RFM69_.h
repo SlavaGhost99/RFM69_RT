@@ -177,7 +177,8 @@ typedef enum
 {
 	_PACKET_FIXED = 0u,
 	_PACKET_VARIABLE,
-	_PACKET_UNLIMIT
+	_PACKET_UNLIMIT,
+	_PACKET_UNKNOW = 255
 }_PACKET_MODE;
 
 
@@ -186,6 +187,7 @@ typedef enum
 volatile static uint8_t _thisAdress = 1;
 volatile static uint8_t _toAdress = 2;
 
+static uint16_t err_Timer;
 /******************************************************************************/
 //SPI Functions
 
@@ -224,7 +226,7 @@ void RF69_ReadMultipleReg(uint8_t reg, uint8_t *data, uint16_t len);
 * @param  None
 * @retval None
 *******************************************************************************/
-void RF69_CallbackWatchTimer(void);
+void RF69_TimerCallback(void);
 
 /***************************************************************************
  * @brief  
@@ -282,7 +284,7 @@ void RF69_SetModeTx(void);
 * @param  None
 * @retval None
 *******************************************************************************/
-void RF69_SetModeListenRX();
+void RF69_SetModeListenRX(void);
 
 /***************************************************************************
  * @brief  
@@ -498,6 +500,32 @@ bool RF69_WaitPacketSent(void);
 * @retval None
 *******************************************************************************/
 void RF69_PacketMode(_PACKET_MODE isLong);
+
+/*******************************************************************************
+* @brief  Запуск сторожевого таймера
+* @param  None uint32_t elapse - Ожидание завершения
+* @retval None
+*******************************************************************************/
+void RF69_TimerStart(uint32_t elapse_mS);
+
+/*******************************************************************************
+* @brief  
+* @param  None
+* @retval None
+*******************************************************************************/
+void RF69_TimerStop(void);
+
+/*******************************************************************************
+* @brief  
+* @param  None
+* @retval None
+*******************************************************************************/
+void RF69_TimerInit (uint32_t elapse_mS);
+
+
+
+
+
 
 
 #ifdef __cplusplus

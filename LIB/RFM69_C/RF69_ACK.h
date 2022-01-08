@@ -19,6 +19,17 @@ extern "C" {
 #endif
 
 /******************************************************************************/
+volatile static uint32_t err_ACK_receiv;
+volatile static uint32_t err_ACK_send;
+
+volatile static uint32_t err_Packet_receiv;
+volatile static uint32_t err_Packet_send;
+
+volatile static uint32_t ok_Packet_send;
+volatile static uint32_t ok_Packet_receiv;
+
+volatile static uint32_t bad_Packet_send;
+volatile static uint32_t bad_Packet_receiv;
 
 /*******************************************************************************
 * @brief  
