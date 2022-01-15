@@ -119,7 +119,7 @@ const osThreadAttr_t RadioTask_attributes = {
   .cb_size = sizeof(RadioTaskControlBlock),
   .stack_mem = &RadioTaskBuffer[0],
   .stack_size = sizeof(RadioTaskBuffer),
-  .priority = (osPriority_t) osPriorityLow,
+  .priority = (osPriority_t) osPriorityNormal,
 };
 /* Definitions for TaskKey */
 osThreadId_t TaskKeyHandle;

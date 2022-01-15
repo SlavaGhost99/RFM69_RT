@@ -140,7 +140,7 @@ const osThreadAttr_t RadioTask_attributes = {
   .cb_size = sizeof(RadioTaskControlBlock),
   .stack_mem = &RadioTaskBuffer[0],
   .stack_size = sizeof(RadioTaskBuffer),
-  .priority = (osPriority_t) osPriorityNormal1,
+  .priority = (osPriority_t) osPriorityNormal,
 };
 /* Definitions for TaskKey */
 osThreadId_t TaskKeyHandle;
@@ -172,18 +172,6 @@ const osThreadAttr_t TaskTIM_RF69_attributes = {
   .stack_mem = &TaskTIM_RF69Buffer[0],
   .stack_size = sizeof(TaskTIM_RF69Buffer),
   .priority = (osPriority_t) osPriorityHigh1,
-};
-/* Definitions for TaskOLED */
-osThreadId_t TaskOLEDHandle;
-uint32_t myTaskOLEDBuffer[ 512 ];
-osStaticThreadDef_t myTaskOLEDControlBlock;
-const osThreadAttr_t TaskOLED_attributes = {
-  .name = "TaskOLED",
-  .cb_mem = &myTaskOLEDControlBlock,
-  .cb_size = sizeof(myTaskOLEDControlBlock),
-  .stack_mem = &myTaskOLEDBuffer[0],
-  .stack_size = sizeof(myTaskOLEDBuffer),
-  .priority = (osPriority_t) osPriorityNormal,
 };
 /* Definitions for RF_Mutex */
 osMutexId_t RF_MutexHandle;
@@ -228,7 +216,6 @@ void StartRadioTask(void *argument);
 void StartTaskKey(void *argument);
 void StartDIO_RF69(void *argument);
 void StartTaskTIM_RF69(void *argument);
-void StartTaskOLED(void *argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
@@ -289,9 +276,6 @@ void MX_FREERTOS_Init(void) {
 
   /* creation of TaskTIM_RF69 */
   TaskTIM_RF69Handle = osThreadNew(StartTaskTIM_RF69, NULL, &TaskTIM_RF69_attributes);
-
-  /* creation of TaskOLED */
-  TaskOLEDHandle = osThreadNew(StartTaskOLED, NULL, &TaskOLED_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -360,7 +344,7 @@ void StartRadioTask(void *argument)
 	volatile static bool _flag= 0;
 	for(;;)
 	{
-//		osMutexWait(RF_MutexHandle, osWaitForever);
+		osMutexWait(RF_MutexHandle, osWaitForever);
 #if _APP_MODE == 1U //Fixed Packet
 		RF69_PacketMode(_PACKET_FIXED);
 		_flag = RF69_Send ((uint8_t*)_LMessage, 28);
@@ -464,7 +448,7 @@ void StartRadioTask(void *argument)
 		}
 #endif
 /******************************************************************************/
-//		osMutexRelease(RF_MutexHandle);
+		osMutexRelease(RF_MutexHandle);
 
 //		_timer_c_StartTimer(10000);
 		 vTaskDelay(20);
@@ -581,34 +565,6 @@ void StartTaskTIM_RF69(void *argument)
 //		osDelay(1);
 	}
   /* USER CODE END StartTaskTIM_RF69 */
-}
-
-/* USER CODE BEGIN Header_StartTaskOLED */
-/**
-* @brief Function implementing the TaskOLED thread.
-* @param argument: Not used
-* @retval None
-*/
-/* USER CODE END Header_StartTaskOLED */
-void StartTaskOLED(void *argument)
-{
-  /* USER CODE BEGIN StartTaskOLED */
-	/* Infinite loop */
-	for(;;)
-	{
-//#include "list.h"
-//		uint8_t str[48];
-//		FontSet(Segoe_UI_Eng_10);
-
-//		sprintf((char*)&str, "ok_Packet_send %i", ok_Packet_send);
-//		OLED_DrawStr((char*)&str,0,0,1);
-//		sprintf((char*)&str, "err_Timer %i", ok_Packet_send);
-//		OLED_DrawStr((char*)&str,0,14,1);
-//		OLED_UpdateScreen();
-
-		osDelay(100);
-	}
-  /* USER CODE END StartTaskOLED */
 }
 
 /* Private application code --------------------------------------------------*/

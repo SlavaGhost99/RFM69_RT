@@ -57,7 +57,7 @@
 	//<9=> TIM9
 	//<10=> TIM10
 	//<11=> TIM11
-	#define _TIM_SELECT 4U
+	#define _TIM_SELECT 10U
 
 	//<o> Set Timer delay (mS)
 	//<20-1000>

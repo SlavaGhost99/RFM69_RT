@@ -362,23 +362,10 @@ void RF69_WriteReg(uint8_t reg, uint8_t data)
 	bufTX[0] = reg | RF69_WRITE_MASK;
 	bufTX[1] = data;
 	
-//	uint16_t count = 0xFFFF;
-	
-	while(_SPI_DMA_TX_HANDLE.State != HAL_DMA_STATE_READY  /*&& count != 0*/)
+	while(_SPI_DMA_TX_HANDLE.State != HAL_DMA_STATE_READY)
 	{
 		__ASM volatile ("NOP");
-//		count --;
 	}
-//	if (count == 0)
-//	{
-//		HAL_DMA_DeInit(&_SPI_DMA_TX_HANDLE);
-//		HAL_DMA_Init(&_SPI_DMA_TX_HANDLE);
-//		HAL_DMA_DeInit(&_SPI_DMA_RX_HANDLE);
-//		HAL_DMA_Init(&_SPI_DMA_RX_HANDLE);
-//		RF69_Unselect();
-//		return ;
-//	}
-
 	RF69_Select();
 	__ASM volatile ("NOP");
 
@@ -406,42 +393,20 @@ uint8_t RF69_ReadReg(uint8_t reg)
 	bufRX[1] = 0;
 	
 
-//	uint16_t count = 0xFFFF;
 	
-	while((_SPI_DMA_TX_HANDLE.State != HAL_DMA_STATE_READY && _SPI_DMA_RX_HANDLE.State != HAL_DMA_STATE_READY) /*&& count != 0*/)
+	while(_SPI_DMA_TX_HANDLE.State != HAL_DMA_STATE_READY && _SPI_DMA_RX_HANDLE.State != HAL_DMA_STATE_READY)
 	{
-//		osDelay(1);
 		__ASM volatile ("NOP");
-//		count--;
 	}
-//	if (count == 0)
-//	{
-//		HAL_DMA_DeInit(&_SPI_DMA_TX_HANDLE);
-//		HAL_DMA_Init(&_SPI_DMA_TX_HANDLE);
-//		HAL_DMA_DeInit(&_SPI_DMA_RX_HANDLE);
-//		HAL_DMA_Init(&_SPI_DMA_RX_HANDLE);
-//		RF69_Unselect();
-//		return 0;
-//	}
 
-	RF69_Unselect();
 	RF69_Select();
 
 	HAL_SPI_TransmitReceive_DMA((SPI_HandleTypeDef*)&_SPI_HANDLE, (uint8_t*)bufTX, (uint8_t*)bufRX, 2);
-//	count = 0xFFFF;
-	while(_SPI_HANDLE.State != HAL_SPI_STATE_READY /*&& count != 0*/)
+
+	while(_SPI_HANDLE.State != HAL_SPI_STATE_READY)
 	{
-//		osDelay(1);
 		__ASM volatile ("NOP");
-//		count--;
 	}
-//	if (count == 0)
-//	{
-//		HAL_SPI_DeInit((SPI_HandleTypeDef*)&_SPI_HANDLE);
-//		HAL_SPI_Init((SPI_HandleTypeDef*)&_SPI_HANDLE);
-//		RF69_Unselect();
-//		return 0;
-//	}
 #if (USE_HAL_SPI_REGISTER_CALLBACKS == 0U)
 	RF69_Unselect();
 #endif
@@ -464,60 +429,26 @@ void RF69_WriteMultipleReg(uint8_t reg, uint8_t *data, uint16_t len)
 //    {
 //		_NSS_ON;
 //    }
-//	uint16_t count = 0xFFFF;
-
-	while(_SPI_DMA_TX_HANDLE.State != HAL_DMA_STATE_READY /*&& count != 0*/)
+	while(_SPI_DMA_TX_HANDLE.State != HAL_DMA_STATE_READY)
 	{
-//		count --;
 		__ASM volatile ("NOP");
 	}
-//	if (count == 0)
-//	{
-//		HAL_DMA_DeInit(&_SPI_DMA_TX_HANDLE);
-//		HAL_DMA_Init(&_SPI_DMA_TX_HANDLE);
-//		HAL_DMA_DeInit(&_SPI_DMA_RX_HANDLE);
-//		HAL_DMA_Init(&_SPI_DMA_RX_HANDLE);
-//		RF69_Unselect();
-//		return ;
-//	}
-	
 	bFlagUseSPI = true;
 	RF69_Select();
     
 	reg = reg | RF69_WRITE_MASK;
 	HAL_SPI_Transmit_DMA((SPI_HandleTypeDef*)&_SPI_HANDLE, &reg, 1);
-	
-//	count = 0xFFFF;
-	while(_SPI_DMA_TX_HANDLE.State != HAL_DMA_STATE_READY /*&& count != 0*/)
+	while(_SPI_DMA_TX_HANDLE.State != HAL_DMA_STATE_READY)
 	{
-//		count --;
 		__ASM volatile ("NOP");
 	}
-//	if (count == 0)
-//	{
-//		HAL_DMA_DeInit(&_SPI_DMA_TX_HANDLE);
-//		HAL_DMA_Init(&_SPI_DMA_TX_HANDLE);
-//		HAL_DMA_DeInit(&_SPI_DMA_RX_HANDLE);
-//		HAL_DMA_Init(&_SPI_DMA_RX_HANDLE);
-//		RF69_Unselect();
-//		return ;
-//	}
 	HAL_SPI_Transmit_DMA((SPI_HandleTypeDef*)&_SPI_HANDLE, data, len);
 	
 #if (USE_HAL_SPI_REGISTER_CALLBACKS == 0U)
-//	count = 0xFFFF;
-	while(_SPI_HANDLE.State != HAL_SPI_STATE_READY /*&& count != 0*/)
+	while(_SPI_HANDLE.State != HAL_SPI_STATE_READY)
 	{
-//		count --;
 		__ASM volatile ("NOP");
 	}
-//	if (count == 0)
-//	{
-//		HAL_SPI_DeInit((SPI_HandleTypeDef*)&_SPI_HANDLE);
-//		HAL_SPI_Init((SPI_HandleTypeDef*)&_SPI_HANDLE);
-//		RF69_Unselect();
-//		return;
-//	}
 #endif
 
 
@@ -565,7 +496,6 @@ void RF69_ReadMultipleReg(uint8_t reg, uint8_t *data, uint16_t len)
 	RF69_Unselect();
 #endif
 }
-
 void RF69_Reset()
 {
 	HAL_GPIO_WritePin(RF_RESET_GPIO_Port,RF_RESET_Pin , GPIO_PIN_SET);
