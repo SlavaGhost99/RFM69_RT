@@ -10,9 +10,9 @@
       <TargetName>RFM69_T</TargetName>
       <ToolsetNumber>0x4</ToolsetNumber>
       <ToolsetName>ARM-ADS</ToolsetName>
-      <pArmCC>5060960::V5.06 update 7 (build 960)::.\ARMCC</pArmCC>
-      <pCCUsed>5060960::V5.06 update 7 (build 960)::.\ARMCC</pCCUsed>
-      <uAC6>0</uAC6>
+      <pArmCC>6150000::V6.15::ARMCLANG</pArmCC>
+      <pCCUsed>6150000::V6.15::ARMCLANG</pCCUsed>
+      <uAC6>1</uAC6>
       <TargetOption>
         <TargetCommonOption>
           <Device>STM32F411CEUx</Device>
@@ -71,9 +71,9 @@
             <nStopU2X>0</nStopU2X>
           </BeforeCompile>
           <BeforeMake>
-            <RunUserProg1>0</RunUserProg1>
+            <RunUserProg1>1</RunUserProg1>
             <RunUserProg2>0</RunUserProg2>
-            <UserProg1Name></UserProg1Name>
+            <UserProg1Name>Copy.bat</UserProg1Name>
             <UserProg2Name></UserProg2Name>
             <UserProg1Dos16Mode>0</UserProg1Dos16Mode>
             <UserProg2Dos16Mode>0</UserProg2Dos16Mode>
@@ -323,7 +323,7 @@
             <PlainCh>0</PlainCh>
             <Ropi>0</Ropi>
             <Rwpi>0</Rwpi>
-            <wLevel>2</wLevel>
+            <wLevel>3</wLevel>
             <uThumb>0</uThumb>
             <uSurpInc>0</uSurpInc>
             <uC99>1</uC99>
@@ -331,8 +331,8 @@
             <useXO>0</useXO>
             <v6Lang>3</v6Lang>
             <v6LangP>6</v6LangP>
-            <vShortEn>0</vShortEn>
-            <vShortWch>0</vShortWch>
+            <vShortEn>1</vShortEn>
+            <vShortWch>1</vShortWch>
             <v6Lto>0</v6Lto>
             <v6WtE>0</v6WtE>
             <v6Rtti>0</v6Rtti>
@@ -340,7 +340,7 @@
               <MiscControls></MiscControls>
               <Define>USE_HAL_DRIVER,STM32F411xE</Define>
               <Undefine></Undefine>
-              <IncludePath>..\..\..\..\LIB\STM32_Cryptographic\Inc;                                    ..\..\LIB\RFM69_C;                                    ..\..\LIB\BASE_IO;                                    ..\..\LIB\CRYPTO_CLASS;                                    ..\..\LIB\SSD1306;                                    ../Drivers/STM32F4xx_HAL_Driver/Inc;                                    ../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy;                                    ../Middlewares/Third_Party/FreeRTOS/Source/include;                                    ../Drivers/CMSIS/Device/ST/STM32F4xx/Include;                                    ../Drivers/CMSIS/Include;                                    ../Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F;                                    ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F;                                    ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS;                                    ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2;                           ../Core/Inc</IncludePath>
+              <IncludePath>..\..\..\..\LIB\STM32_Cryptographic\Inc;..\..\LIB\RFM69_C;..\..\LIB\BASE_IO;..\..\LIB\CRYPTO_CLASS;..\..\LIB\SSD1306;../Drivers/STM32F4xx_HAL_Driver/Inc;../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy;../Middlewares/Third_Party/FreeRTOS/Source/include;../Drivers/CMSIS/Device/ST/STM32F4xx/Include;../Drivers/CMSIS/Include;../Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F;../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F;../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS;../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2;../Core/Inc</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>

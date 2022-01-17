@@ -186,15 +186,21 @@ bool SendVarACK(const uint8_t *buf, uint8_t len)
 
 bool SendUnlimACK(const uint8_t *buf, uint16_t len)
 {
+	static _HEADER_ACK_PACK header;
 	RF69_PacketMode(_PACKET_UNLIMIT);
 	if(len > _MAX_UNLIM_BUF_LENGHT)
 	{
 		return false;
 	}
-	_unlim_pack._header.lenght = len;
-	_unlim_pack._header.crc = CalcCRC((uint8_t*)buf, len);
+	header.lenght = len;
+	header.crc = CalcCRC((uint8_t*)buf, len);
+	
+	GenRNG ((uint8_t*)&header.dataRand, sizeof(header.dataRand));
+//	_unlim_pack._header.lenght = len;
+//	_unlim_pack._header.crc = 
+//	GenRNG ((uint8_t*)&_unlim_pack._header.dataRand, sizeof(_unlim_pack._header.dataRand));
+	memcpy ((uint8_t*)&_unlim_pack._header, (uint8_t*)&header, sizeof(header));
 	memcpy((uint8_t*)_unlim_pack._packet, buf, len);
-	GenRNG ((uint8_t*)&_unlim_pack._header.dataRand, sizeof(_unlim_pack._header.dataRand));
 	RF69_SendUnlimitedLengthPacket((uint8_t*)&_unlim_pack, len + sizeof(_HEADER_ACK_PACK));
 	cnt = 0;
 	while(_flag_Tx_Busy)

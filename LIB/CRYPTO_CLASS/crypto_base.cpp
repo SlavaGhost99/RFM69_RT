@@ -11,7 +11,10 @@ Crypto_base::Crypto_base()
 {
 }
 
-
+int32_t Crypto_base::Crypto_Init(void* pHandle, uint8_t *pKey, uint8_t *pIv)
+{
+	return 0;
+}
 
 
 
